@@ -164,7 +164,20 @@ types = feat,fix,docs,style,refactor,test,chore,ci,perf,build,revert
 
 ### Step 5: CI Pattern (Self-Healing)
 
-The CI workflow has a critical pattern: **auto-issue management**.
+The CI workflow has 3 parallel lint jobs + a summary job with **auto-issue management**.
+
+**Shell lint job:** Must use `severity: warning` to skip SC1091 (note-level, dynamic `source`
+paths):
+
+```yaml
+- name: Run shellcheck
+  uses: ludeeus/action-shellcheck@2.0.0
+  with:
+    scandir: '.github/scripts'
+    severity: warning
+```
+
+**Auto-issue management:**
 
 **On failure (main branch only):**
 
@@ -244,11 +257,11 @@ For exact file contents, read from the user's existing repos:
 
 ## Common Mistakes
 
-| Mistake                                | Fix                                                           |
-| -------------------------------------- | ------------------------------------------------------------- |
-| markdownlint scans node_modules        | Use `.markdownlint-cli2.jsonc` with `ignores` array           |
-| shellcheck fails on dynamic `source`   | Use `--severity=warning` to skip SC1091 (info)                |
-| prettier reformats CHANGELOG           | Add `CHANGELOG.md` to `.prettierignore`                       |
-| CI workflow interpolates user input    | Always use `env:` variables, never direct `${{ }}` in `run:`  |
-| commit-and-tag-version fails on commit | Use `--skip.commit --skip.tag`, then commit manually          |
-| `.semver` needs trailing newline       | Some tools strip it; configure `end-of-file-fixer` to exclude |
+| Mistake                                | Fix                                                                   |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| markdownlint scans node_modules        | Use `.markdownlint-cli2.jsonc` with `ignores` array                   |
+| shellcheck fails on dynamic `source`   | `--severity=warning` in Makefile AND `severity: warning` in CI action |
+| prettier reformats CHANGELOG           | Add `CHANGELOG.md` to `.prettierignore`                               |
+| CI workflow interpolates user input    | Always use `env:` variables, never direct `${{ }}` in `run:`          |
+| commit-and-tag-version fails on commit | Use `--skip.commit --skip.tag`, then commit manually                  |
+| `.semver` needs trailing newline       | Some tools strip it; configure `end-of-file-fixer` to exclude         |
