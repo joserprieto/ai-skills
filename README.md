@@ -14,6 +14,11 @@ AI Skills is a curated collection of reusable skills for AI coding agents. Each 
 self-contained reference guide with triggers, workflows, patterns, and common mistakes — designed to
 be auto-loaded by Claude Code based on context matching.
 
+All skills follow the [Agent Skills](https://agentskills.io/) open specification
+([spec](https://agentskills.io/specification) | [repo](https://github.com/agentskills/agentskills))
+— a portable format supported by Claude Code, Cursor, Gemini CLI, VS Code, and
+[many other tools](https://agentskills.io/home).
+
 ## Available Skills
 
 | Skill                                                          | Description                                                                        |
