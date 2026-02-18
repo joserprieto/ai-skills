@@ -4,6 +4,10 @@ description:
   Use when creating a new repository, initializing a project from scratch, or setting up OSS
   infrastructure (CI/CD, linting, releases, docs). Also use when user says "new repo", "init
   project", "set up repository", or "enterprise setup".
+license: MIT
+metadata:
+  author: joserprieto
+  version: '0.1.0'
 ---
 
 # Enterprise Repository Setup
