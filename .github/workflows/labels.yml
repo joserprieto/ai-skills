@@ -1,0 +1,34 @@
+# ====================================================================================
+# Labels Sync Workflow - AI Skills
+# ====================================================================================
+#
+# Synchronizes GitHub labels from .github/config/labels.json on push to main.
+# Security: Only reads a static config file from the repo. No user inputs used.
+#
+# ====================================================================================
+
+name: Sync Labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/config/labels.json'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    name: Sync Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Sync labels
+        uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/config/labels.json
+          delete-other-labels: false

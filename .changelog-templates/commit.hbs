@@ -1,0 +1,18 @@
+*{{#if scope}} **{{scope}}:**
+{{~/if}} {{#if subject}}
+  {{~subject}}
+{{~else}}
+  {{~header}}
+{{~/if}}
+
+{{~!-- commit link --}} ([{{shortHash}}]({{commitUrlFormat}}))
+
+{{~!-- referenced issues --}}
+{{~#if references~}}
+  , closes
+  {{~#each references}} {{#if this.owner}}
+    {{~this.owner}}/
+  {{~/if}}
+  {{~this.repository}}{{this.prefix}}{{this.issue}}
+  {{~/each}}
+{{~/if}}

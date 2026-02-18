@@ -1,0 +1,6 @@
+CHANGELOG.md
+node_modules/
+.venv/
+dist/
+build/
+*.hbs

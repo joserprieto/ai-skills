@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "description": "Release and linting tooling for ai-skills",
+  "scripts": {
+    "release": "commit-and-tag-version --skip.commit --skip.tag",
+    "release:dry-run": "commit-and-tag-version --dry-run",
+    "release:patch": "commit-and-tag-version --release-as patch --skip.commit --skip.tag",
+    "release:minor": "commit-and-tag-version --release-as minor --skip.commit --skip.tag",
+    "release:major": "commit-and-tag-version --release-as major --skip.commit --skip.tag",
+    "lint:md": "markdownlint-cli2 '**/*.md'",
+    "lint:md:fix": "markdownlint-cli2 --fix '**/*.md'",
+    "format": "prettier --write '**/*.{md,json,yml,yaml}'",
+    "format:check": "prettier --check '**/*.{md,json,yml,yaml}'"
+  },
+  "devDependencies": {
+    "commit-and-tag-version": "^12.5.0",
+    "markdownlint-cli2": "^0.17.0",
+    "prettier": "^3.4.2"
+  }
+}
