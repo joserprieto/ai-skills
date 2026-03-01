@@ -1,0 +1,50 @@
+# Ticket entity — represents a single admission right for an event.
+# Tickets follow a strict status lifecycle enforced by domain rules:
+#
+#   available → reserved → purchased → checked_in
+#       ↓           ↓          ↓
+#    (stays)    (expires)   refunded
+#
+# A ticket is always linked to exactly one event and one pricing tier.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: ticket
+
+type: object
+properties:
+
+  id:
+    $ref: "common.yaml#/$defs/UUID"
+
+  eventId:
+    $ref: "common.yaml#/$defs/UUID"
+
+  # References an external pricing-tier definition. Kept as a plain
+  # string (not UUID) because tier IDs may come from a billing system
+  # with its own identifier format.
+  pricingTierId:
+    type: string
+    description: "Identifier of the pricing tier (e.g. 'vip', 'early-bird')."
+
+  # Null for general-admission events where seats are unassigned.
+  seatLocation:
+    $ref: "common.yaml#/$defs/SeatLocation"
+    description: "Physical seat; omitted for general-admission tickets."
+
+  # See lifecycle diagram above.
+  status:
+    type: string
+    enum: [ available, reserved, purchased, checked_in, refunded ]
+
+  # Set only after the ticket is added to an order.
+  orderId:
+    $ref: "common.yaml#/$defs/UUID"
+    description: "Linked order; null while the ticket is still available."
+
+  # Reservation is time-boxed to prevent indefinite seat-locking.
+  # The expiry is cleared once the order is paid.
+  reservedUntil:
+    $ref: "common.yaml#/$defs/DateTime"
+    description: "Reservation expiry; null when not reserved."
+
+required: [ id, eventId, pricingTierId, status ]

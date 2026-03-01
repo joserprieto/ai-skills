@@ -1,0 +1,57 @@
+# Common shared types for the Event Ticketing Platform.
+# Every other schema references these building blocks via $ref,
+# ensuring a single definition for cross-cutting concerns like
+# money representation, identifiers, and pagination.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: common
+
+$defs:
+
+  # --- Monetary value object ---
+  # Modelled as an explicit pair (amount + currency) instead of a bare
+  # number so that currency can never be "assumed" by callers.
+  Money:
+    type: object
+    properties:
+      amount:
+        type: number
+        minimum: 0
+        description: "Monetary value; zero is valid (e.g. free events)."
+      currency:
+        $ref: "#/$defs/Currency"
+    required: [ amount, currency ]
+
+  # Three currencies cover the primary markets for live events in
+  # Europe and North America. Extend as new markets are added.
+  Currency:
+    type: string
+    enum: [ EUR, USD, GBP ]
+
+  # All entity identifiers use UUID v4 to avoid sequential-guessing
+  # attacks and to allow client-side ID generation.
+  UUID:
+    type: string
+    format: uuid
+
+  DateTime:
+    type: string
+    format: date-time
+    description: "ISO-8601 date-time with timezone offset."
+
+  # Physical seat inside a venue. Used by assigned-seating events;
+  # general-admission events leave seatLocation null on the ticket.
+  SeatLocation:
+    type: object
+    properties:
+      section:
+        type: string
+        description: "Named area of the venue (e.g. 'Stalls', 'Balcony')."
+      row:
+        type: string
+        description: "Row identifier (letter or number depending on venue)."
+      number:
+        type: integer
+        minimum: 1
+        description: "Seat number within the row."
+    required: [ section, row, number ]
