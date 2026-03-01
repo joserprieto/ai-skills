@@ -1,0 +1,4 @@
+# Service management (add these to your .gitignore)
+.state/
+.logs/
+.env.local
