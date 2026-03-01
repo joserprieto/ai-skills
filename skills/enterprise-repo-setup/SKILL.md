@@ -6,8 +6,9 @@ description:
   project", "set up repository", or "enterprise setup".
 license: MIT
 metadata:
-  author: joserprieto
-  version: '0.1.0'
+  author: Jose R. Prieto <hi at joserprieto dot es>
+  version: '0.2.0'
+  status: APPROVED
 ---
 
 # Enterprise Repository Setup
