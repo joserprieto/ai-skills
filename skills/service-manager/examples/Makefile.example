@@ -1,0 +1,110 @@
+# ===============================================================================
+# Service Manager Makefile Template
+# ===============================================================================
+# Replace <PROJECT_NAME>, <SERVICE_NAME>, <PORT>, and commands as needed.
+# ===============================================================================
+
+PROJECT_NAME := My Project
+VERSION := 1.0.0
+SM := npx tsx scripts/service-manager.ts
+
+SHELL := /bin/bash
+.SHELLFLAGS := -euo pipefail -c
+.DEFAULT_GOAL := help
+MAKEFLAGS += --no-print-directory
+
+# ── Load optional .env.local ──────────────────────────────────────────────────
+-include .env.local
+
+# ── Defaults ──────────────────────────────────────────────────────────────────
+DEV_PORT    ?= 3000
+STATE_DIR   ?= $(CURDIR)/.state
+LOGS_DIR    ?= $(CURDIR)/.logs
+ROOT_DIR    ?= $(CURDIR)
+LOG_MAX_SIZE ?= 10M
+LOG_MAX_FILES ?= 5
+
+# ── Export env vars to service manager ────────────────────────────────────────
+export DEV_PORT STATE_DIR LOGS_DIR LOG_MAX_SIZE LOG_MAX_FILES ROOT_DIR
+
+# ── Color Codes ───────────────────────────────────────────────────────────────
+ifneq ($(TERM),)
+    GREEN  := $(shell tput setaf 2)
+    CYAN   := $(shell tput setaf 6)
+    BOLD   := $(shell tput bold)
+    DIM    := $(shell tput dim)
+    RESET  := $(shell tput sgr0)
+else
+    GREEN  :=
+    CYAN   :=
+    BOLD   :=
+    DIM    :=
+    RESET  :=
+endif
+
+CHECK := ✓
+INFO  := ℹ
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Service Management
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.PHONY: start stop status tail logs
+
+start: _ensure                       ## Start dev server (background)
+	@$(SM) start dev
+
+start/fg: _ensure                    ## Start dev server (foreground)
+	@$(SM) start dev --fg
+
+stop:                                ## Stop all services
+	@$(SM) stop --all
+
+status:                              ## Show service status
+	@$(SM) status
+
+status/details:                      ## Show detailed status
+	@$(SM) status --detail
+
+tail:                                ## Tail logs of running services
+	@$(SM) tail --all
+
+logs:                                ## List log files
+	@$(SM) logs
+
+logs/rotate:                         ## Rotate log files
+	@$(SM) logs --rotate
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Utility
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.PHONY: install clean
+
+install:                             ## Install dependencies
+	@pnpm install
+
+clean:                               ## Remove build artifacts
+	@rm -rf dist node_modules/.cache .state .logs
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Internal
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.PHONY: _ensure
+_ensure: node_modules
+
+node_modules: package.json
+	@pnpm install
+	@touch node_modules
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Help
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.PHONY: help
+help: ## Show this help message
+	@echo "$(BOLD)$(CYAN)$(PROJECT_NAME)$(RESET) $(DIM)v$(VERSION)$(RESET)"
+	@echo ""
+	@grep -E '^[a-zA-Z/]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2}'
