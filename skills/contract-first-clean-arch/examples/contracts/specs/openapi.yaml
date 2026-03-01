@@ -1,0 +1,186 @@
+# OpenAPI 3.1.0 — Event Ticketing API
+#
+# This spec is the SSOT for the synchronous HTTP interface. Code
+# generators consume it to produce server stubs and client SDKs,
+# ensuring the implementation never drifts from the contract.
+
+openapi: "3.1.0"
+
+info:
+  title: Event Ticketing API
+  version: "1.0.0"
+  description: >
+    RESTful API for creating events, reserving and purchasing tickets,
+    and checking attendees in at the door.
+
+paths:
+
+  # --- Events ----------------------------------------------------------
+
+  /events:
+    post:
+      operationId: createEvent
+      summary: Create a new event in draft status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              # The request omits id (server-generated) and status
+              # (always starts as "draft").
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                description:
+                  type: string
+                venueId:
+                  $ref: "../schemas/common.yaml#/$defs/UUID"
+                startsAt:
+                  $ref: "../schemas/common.yaml#/$defs/DateTime"
+                endsAt:
+                  $ref: "../schemas/common.yaml#/$defs/DateTime"
+                capacity:
+                  type: integer
+                  minimum: 1
+              required: [ title, venueId, startsAt, endsAt, capacity ]
+      responses:
+        "201":
+          description: Event created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/event.yaml"
+        "400":
+          description: Invalid request payload (validation errors).
+
+  /events/{eventId}:
+    get:
+      operationId: getEvent
+      summary: Retrieve a single event by its ID.
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            $ref: "../schemas/common.yaml#/$defs/UUID"
+      responses:
+        "200":
+          description: The requested event.
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/event.yaml"
+        "404":
+          description: Event not found.
+
+  # --- Reservation -----------------------------------------------------
+
+  /events/{eventId}/reserve:
+    post:
+      operationId: reserveTickets
+      summary: Reserve one or more tickets and create a pending order.
+      description: >
+        Atomically reserves the requested tickets for a short window
+        (typically 10 minutes). Returns an Order in "pending" status.
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            $ref: "../schemas/common.yaml#/$defs/UUID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticketIds:
+                  type: array
+                  items:
+                    $ref: "../schemas/common.yaml#/$defs/UUID"
+                  minItems: 1
+                  description: "IDs of the tickets to reserve."
+                buyerEmail:
+                  type: string
+                  format: email
+                buyerName:
+                  type: string
+                  minLength: 1
+              required: [ ticketIds, buyerEmail, buyerName ]
+      responses:
+        "201":
+          description: Tickets reserved; order created in pending status.
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/order.yaml"
+        "400":
+          description: Invalid payload or ticket IDs do not belong to event.
+        "404":
+          description: Event not found.
+        "409":
+          description: One or more tickets are no longer available.
+
+  # --- Purchase --------------------------------------------------------
+
+  /orders/{orderId}/purchase:
+    post:
+      operationId: purchaseOrder
+      summary: Complete payment for a pending order.
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            $ref: "../schemas/common.yaml#/$defs/UUID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paymentToken:
+                  type: string
+                  description: "One-time token from the payment gateway."
+              required: [ paymentToken ]
+      responses:
+        "200":
+          description: Payment succeeded; order is now paid.
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/order.yaml"
+        "400":
+          description: Invalid payment token.
+        "404":
+          description: Order not found.
+        "409":
+          description: Order is not in a payable state (already paid, cancelled, etc.).
+
+  # --- Check-in -------------------------------------------------------
+
+  /tickets/{ticketId}/check-in:
+    post:
+      operationId: checkInTicket
+      summary: Mark a ticket as checked in at the venue entrance.
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            $ref: "../schemas/common.yaml#/$defs/UUID"
+      responses:
+        "200":
+          description: Ticket checked in successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/ticket.yaml"
+        "404":
+          description: Ticket not found.
+        "409":
+          description: Ticket is not in a check-in-eligible state.

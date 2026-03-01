@@ -1,0 +1,123 @@
+# AsyncAPI 3.0.0 — Event Ticketing Domain Events
+#
+# These are the asynchronous messages emitted by the ticketing
+# bounded context. Downstream consumers (email service, analytics,
+# fraud detection) subscribe to these channels.
+#
+# Channel naming follows the pattern: {aggregate}/{past-tense-verb}
+# so consumers can filter by aggregate or by event type.
+
+asyncapi: "3.0.0"
+
+info:
+  title: Event Ticketing Events
+  version: "1.0.0"
+  description: >
+    Domain events published by the Event Ticketing Platform.
+    All messages are delivered at-least-once; consumers must be
+    idempotent.
+
+# Default content type for all channel messages.
+defaultContentType: application/json
+
+channels:
+
+  # --- Ticket events ---------------------------------------------------
+
+  ticketReserved:
+    address: ticket/reserved
+    description: >
+      Emitted when a ticket is reserved as part of an order.
+      Consumers can use reservedUntil to schedule expiry checks.
+    messages:
+      ticketReservedMessage:
+        payload:
+          type: object
+          properties:
+            ticketId:
+              $ref: "../schemas/common.yaml#/$defs/UUID"
+            eventId:
+              $ref: "../schemas/common.yaml#/$defs/UUID"
+            orderId:
+              $ref: "../schemas/common.yaml#/$defs/UUID"
+            reservedUntil:
+              $ref: "../schemas/common.yaml#/$defs/DateTime"
+          required: [ ticketId, eventId, orderId, reservedUntil ]
+
+  ticketCheckedIn:
+    address: ticket/checked-in
+    description: >
+      Emitted when an attendee scans their ticket at the venue
+      entrance. Useful for real-time occupancy dashboards.
+    messages:
+      ticketCheckedInMessage:
+        payload:
+          type: object
+          properties:
+            ticketId:
+              $ref: "../schemas/common.yaml#/$defs/UUID"
+            eventId:
+              $ref: "../schemas/common.yaml#/$defs/UUID"
+            checkedInAt:
+              $ref: "../schemas/common.yaml#/$defs/DateTime"
+          required: [ ticketId, eventId, checkedInAt ]
+
+  # --- Order events ----------------------------------------------------
+
+  orderPaid:
+    address: order/paid
+    description: >
+      Emitted after successful payment capture. Triggers e-ticket
+      generation and confirmation email.
+    messages:
+      orderPaidMessage:
+        payload:
+          type: object
+          properties:
+            orderId:
+              $ref: "../schemas/common.yaml#/$defs/UUID"
+            paymentId:
+              type: string
+              description: "Reference from the payment gateway."
+            totalAmount:
+              $ref: "../schemas/common.yaml#/$defs/Money"
+          required: [ orderId, paymentId, totalAmount ]
+
+  orderCancelled:
+    address: order/cancelled
+    description: >
+      Emitted when an order is cancelled (by buyer, expiry, or admin).
+      Consumers should release reserved tickets and, if already paid,
+      initiate the refund flow.
+    messages:
+      orderCancelledMessage:
+        payload:
+          type: object
+          properties:
+            orderId:
+              $ref: "../schemas/common.yaml#/$defs/UUID"
+            reason:
+              type: string
+              description: "Human-readable cancellation reason."
+            cancelledAt:
+              $ref: "../schemas/common.yaml#/$defs/DateTime"
+          required: [ orderId, reason, cancelledAt ]
+
+# Operations bind channels to send/receive semantics.
+operations:
+  onTicketReserved:
+    action: send
+    channel:
+      $ref: "#/channels/ticketReserved"
+  onTicketCheckedIn:
+    action: send
+    channel:
+      $ref: "#/channels/ticketCheckedIn"
+  onOrderPaid:
+    action: send
+    channel:
+      $ref: "#/channels/orderPaid"
+  onOrderCancelled:
+    action: send
+    channel:
+      $ref: "#/channels/orderCancelled"

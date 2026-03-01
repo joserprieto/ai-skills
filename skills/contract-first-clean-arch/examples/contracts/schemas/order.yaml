@@ -1,0 +1,56 @@
+# Order aggregate — groups one or more tickets into a purchasable unit.
+# The order is the transactional boundary: either all tickets in an
+# order are paid for, or the entire order is cancelled/refunded.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: order
+
+type: object
+properties:
+
+  id:
+    $ref: "common.yaml#/$defs/UUID"
+
+  # An order must contain at least one ticket. The upper bound is
+  # intentionally left open — business rules (e.g. max 6 per buyer)
+  # are enforced in the domain layer, not in the schema.
+  ticketIds:
+    type: array
+    items:
+      $ref: "common.yaml#/$defs/UUID"
+    minItems: 1
+    description: "IDs of the tickets included in this order."
+
+  buyerEmail:
+    type: string
+    format: email
+    description: "Contact email for confirmations and e-tickets."
+
+  buyerName:
+    type: string
+    minLength: 1
+    description: "Full name as it will appear on the ticket."
+
+  totalAmount:
+    $ref: "common.yaml#/$defs/Money"
+    description: "Sum of all ticket prices; computed server-side."
+
+  # Order lifecycle:
+  #   pending   → tickets reserved, awaiting payment
+  #   confirmed → payment intent accepted by gateway
+  #   paid      → funds captured; tickets are now purchased
+  #   cancelled → buyer or system cancelled before payment
+  #   refunded  → post-payment reversal
+  status:
+    type: string
+    enum: [ pending, confirmed, paid, cancelled, refunded ]
+
+  # Set by the payment gateway after a successful charge.
+  paymentId:
+    type: string
+    description: "External payment reference; null until payment succeeds."
+
+  createdAt:
+    $ref: "common.yaml#/$defs/DateTime"
+
+required: [ id, ticketIds, buyerEmail, buyerName, totalAmount, status, createdAt ]
