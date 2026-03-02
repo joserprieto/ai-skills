@@ -49,21 +49,21 @@ fontColor=#242846;fontStyle=1;
 
 **Key parameters:**
 
-| Parameter | Value | Purpose |
-|-----------|-------|---------|
-| `shape=cube` | native | 3D cube with perspective (NOT `mxgraph.uml.node` which is flat) |
-| `size=10` | pixels | Depth of the 3D face |
-| `direction=south` | - | Top face visible (standard UML deployment view) |
-| `boundedLbl=1` | boolean | Label stays within cube body |
-| `recursiveResize=0` | boolean | Children don't auto-resize with parent |
+| Parameter           | Value   | Purpose                                                         |
+| ------------------- | ------- | --------------------------------------------------------------- |
+| `shape=cube`        | native  | 3D cube with perspective (NOT `mxgraph.uml.node` which is flat) |
+| `size=10`           | pixels  | Depth of the 3D face                                            |
+| `direction=south`   | -       | Top face visible (standard UML deployment view)                 |
+| `boundedLbl=1`      | boolean | Label stays within cube body                                    |
+| `recursiveResize=0` | boolean | Children don't auto-resize with parent                          |
 
 **Variants:**
 
 - **EOL/Critical**: `fillColor=#FFF1EE;strokeColor=#EB4529;fontColor=#EB4529;strokeWidth=2;`
 - **OK/Standard**: `fillColor=#E5E7F1;strokeColor=#242846;fontColor=#242846;strokeWidth=1;`
 
-**Common mistake**: Using `shape=mxgraph.uml.node` - this renders a flat rectangle with a small
-3D tab, not a proper cube. Always use `shape=cube`.
+**Common mistake**: Using `shape=mxgraph.uml.node` - this renders a flat rectangle with a small 3D
+tab, not a proper cube. Always use `shape=cube`.
 
 ## 2. UML Component
 
@@ -74,10 +74,11 @@ strokeWidth=1;fontFamily=Trebuchet MS;fontSize=9;
 fontColor=#242846;verticalAlign=top;
 ```
 
-This is correct as-is. The `mxgraph.uml.component` shape renders the standard UML component
-notation with the two small rectangles on the left side.
+This is correct as-is. The `mxgraph.uml.component` shape renders the standard UML component notation
+with the two small rectangles on the left side.
 
 **Variant - Critical/EOL:**
+
 ```
 fillColor=#FFF1EE;strokeColor=#EB4529;strokeWidth=2;fontColor=#EB4529;fontStyle=1;
 ```
@@ -94,8 +95,8 @@ Renders the standard UML artifact with the folded corner.
 
 ## 4. AWS Infrastructure Group Shapes
 
-Hierarchical containment for infrastructure boundaries. These use the AWS4 shape library built
-into draw.io.
+Hierarchical containment for infrastructure boundaries. These use the AWS4 shape library built into
+draw.io.
 
 ### 4.1 Corporate Datacenter (Provider level)
 
@@ -187,12 +188,12 @@ fontFamily=Trebuchet MS;fontSize=8;fontColor=#242846;
 
 **Variants:**
 
-| Variant | Arrow | Extra |
-|---------|-------|-------|
-| Default | `endArrow=open;endFill=0;` | Open arrowhead (UML dependency) |
-| Directed flow | `endArrow=block;endFill=1;` | Filled arrowhead (data flow) |
-| Dashed | add `dashed=1;` | Optional dependency |
-| No arrow | `endArrow=none;` | Association |
+| Variant       | Arrow                       | Extra                           |
+| ------------- | --------------------------- | ------------------------------- |
+| Default       | `endArrow=open;endFill=0;`  | Open arrowhead (UML dependency) |
+| Directed flow | `endArrow=block;endFill=1;` | Filled arrowhead (data flow)    |
+| Dashed        | add `dashed=1;`             | Optional dependency             |
+| No arrow      | `endArrow=none;`            | Association                     |
 
 ### 5.2 Entity Relation
 
@@ -211,8 +212,8 @@ For 3D/isometric diagrams.
 edgeStyle=isometricEdgeStyle;elbow=vertical;
 ```
 
-**Common mistake**: Omitting `edgeStyle=orthogonalEdgeStyle` produces straight-line edges that
-cross over shapes. Always set an edgeStyle.
+**Common mistake**: Omitting `edgeStyle=orthogonalEdgeStyle` produces straight-line edges that cross
+over shapes. Always set an edgeStyle.
 
 ## 6. UML Sequence Diagram Elements
 
@@ -316,31 +317,31 @@ strokeColor=#242846;
 
 ### Colors
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `C_BLUE` | `#242846` | Primary (strokes, text, dark fills) |
-| `C_RED` | `#EB4529` | Critical, EOL, alerts |
-| `C_YELLOW` | `#FFC100` | Warnings, gates, decisions |
-| `C_GREEN` | `#009638` | Success, target, VPC boundaries |
-| `C_BLUE_AUX` | `#90BAE4` | Secondary (dashed borders, regions) |
-| `C_RED_FILL` | `#FFF1EE` | Light red background |
-| `C_BLUE_FILL` | `#E5E7F1` | Light blue background |
-| `C_WHITE` | `#FFFFFF` | Clean backgrounds |
-| `C_GRAY` | `#999999` | Legends, secondary elements |
-| `C_LIGHT_GRAY` | `#F5F5F5` | Subtle backgrounds |
-| `C_ORANGE` | `#FF8C00` | High severity (not critical) |
+| Token          | Hex       | Usage                               |
+| -------------- | --------- | ----------------------------------- |
+| `C_BLUE`       | `#242846` | Primary (strokes, text, dark fills) |
+| `C_RED`        | `#EB4529` | Critical, EOL, alerts               |
+| `C_YELLOW`     | `#FFC100` | Warnings, gates, decisions          |
+| `C_GREEN`      | `#009638` | Success, target, VPC boundaries     |
+| `C_BLUE_AUX`   | `#90BAE4` | Secondary (dashed borders, regions) |
+| `C_RED_FILL`   | `#FFF1EE` | Light red background                |
+| `C_BLUE_FILL`  | `#E5E7F1` | Light blue background               |
+| `C_WHITE`      | `#FFFFFF` | Clean backgrounds                   |
+| `C_GRAY`       | `#999999` | Legends, secondary elements         |
+| `C_LIGHT_GRAY` | `#F5F5F5` | Subtle backgrounds                  |
+| `C_ORANGE`     | `#FF8C00` | High severity (not critical)        |
 
 ### Typography
 
-| Context | Font | Size |
-|---------|------|------|
-| Titles | Trebuchet MS | 16px, bold |
-| Boundaries | Trebuchet MS | 11-12px, bold |
-| Devices | Trebuchet MS | 10px, bold |
-| Components | Trebuchet MS | 9px |
-| Artifacts | Trebuchet MS | 8px |
-| Edges | Trebuchet MS | 8px |
-| Annotations | Trebuchet MS | 8-9px |
+| Context     | Font         | Size          |
+| ----------- | ------------ | ------------- |
+| Titles      | Trebuchet MS | 16px, bold    |
+| Boundaries  | Trebuchet MS | 11-12px, bold |
+| Devices     | Trebuchet MS | 10px, bold    |
+| Components  | Trebuchet MS | 9px           |
+| Artifacts   | Trebuchet MS | 8px           |
+| Edges       | Trebuchet MS | 8px           |
+| Annotations | Trebuchet MS | 8-9px         |
 
 **Serif alternative**: Georgia (for formal documents, not diagrams).
 
@@ -348,15 +349,16 @@ strokeColor=#242846;
 
 ### SVG Embedding
 
-draw.io SVG exports embed fonts as `@font-face` references. If Trebuchet MS is not available
-on the viewer's system, it falls back to the browser's sans-serif default.
+draw.io SVG exports embed fonts as `@font-face` references. If Trebuchet MS is not available on the
+viewer's system, it falls back to the browser's sans-serif default.
 
-**Mitigation**: When exporting for web embedding, add `fontFamily=Trebuchet MS,Helvetica,Arial,sans-serif;` to ensure graceful fallback.
+**Mitigation**: When exporting for web embedding, add
+`fontFamily=Trebuchet MS,Helvetica,Arial,sans-serif;` to ensure graceful fallback.
 
 ### Compression
 
-draw.io files can be saved compressed (deflate + base64) or uncompressed (raw XML). For
-programmatic generation, always save uncompressed:
+draw.io files can be saved compressed (deflate + base64) or uncompressed (raw XML). For programmatic
+generation, always save uncompressed:
 
 ```python
 tree = ET.ElementTree(mxfile)
@@ -366,8 +368,8 @@ tree.write(filepath, encoding="UTF-8", xml_declaration=True)
 
 ### Cell ID Conventions
 
-Use semantic, hyphenated IDs: `dep-fleetweb`, `ov-provider`, `cdc-e-wal`. This makes debugging
-XML much easier than auto-generated IDs.
+Use semantic, hyphenated IDs: `dep-fleetweb`, `ov-provider`, `cdc-e-wal`. This makes debugging XML
+much easier than auto-generated IDs.
 
 ### Parent-Child Containment
 

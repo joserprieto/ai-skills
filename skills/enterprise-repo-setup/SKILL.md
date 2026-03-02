@@ -34,15 +34,15 @@ digraph setup {
 
 Ask the user (use AskUserQuestion):
 
-| Parameter         | Required | Default              |
-| ----------------- | -------- | -------------------- |
-| Project name      | Yes      | —                    |
-| Description       | Yes      | —                    |
-| GitHub owner/org  | Yes      | —                    |
-| GitHub visibility | No       | public               |
-| License           | No       | MIT                  |
-| Tech stack        | No       | generic              |
-| Contact email     | Yes      | git author email     |
+| Parameter         | Required | Default          |
+| ----------------- | -------- | ---------------- |
+| Project name      | Yes      | —                |
+| Description       | Yes      | —                |
+| GitHub owner/org  | Yes      | —                |
+| GitHub visibility | No       | public           |
+| License           | No       | MIT              |
+| Tech stack        | No       | generic          |
+| Contact email     | Yes      | git author email |
 
 **Contact email:** This is the public email shown in `CODE_OF_CONDUCT.md` and `SECURITY.md`. Suggest
 the git author email as default (`git config user.email`). This email MUST be obfuscated in all
@@ -273,11 +273,12 @@ In `CODE_OF_CONDUCT.md` and `SECURITY.md`, ALWAYS obfuscate emails to prevent au
 
 ```markdown
 <!-- GOOD — anti-scraping format -->
+
 **hi [at] example [dot] com**
 
 <!-- BAD — trivially scrapeable -->
-hi@example.com
-<a href="mailto:hi@example.com">
+
+hi@example.com <a href="mailto:hi@example.com">
 ```
 
 The contact email SHOULD be the same as the git author email. Ask the user during setup (Step 1).
@@ -401,12 +402,12 @@ pattern is strictly superior:
 
 **Why this is better than `.gitkeep`:**
 
-| Aspect | `.gitkeep` | `.gitignore` pattern |
-| --- | --- | --- |
-| Prevents accidental commits | No — any file can be added | Yes — `*` blocks all files |
-| Self-documenting | No — empty file with no semantics | Yes — explicitly declares intent |
-| Orphan risk | High — `.gitkeep` files get forgotten | None — `.gitignore` is self-contained |
-| Subdirectory support | No — just tracks the directory | Yes — use `!subdir` to whitelist children |
+| Aspect                      | `.gitkeep`                            | `.gitignore` pattern                      |
+| --------------------------- | ------------------------------------- | ----------------------------------------- |
+| Prevents accidental commits | No — any file can be added            | Yes — `*` blocks all files                |
+| Self-documenting            | No — empty file with no semantics     | Yes — explicitly declares intent          |
+| Orphan risk                 | High — `.gitkeep` files get forgotten | None — `.gitignore` is self-contained     |
+| Subdirectory support        | No — just tracks the directory        | Yes — use `!subdir` to whitelist children |
 
 **For sensitive directories** (keys, secrets), the `.gitignore` pattern actively protects against
 accidental commits of private material. A `.gitkeep` provides zero protection.
@@ -442,8 +443,8 @@ docs/plans/
 | CI workflow interpolates user input    | Always use `env:` variables, never direct `${{ }}` in `run:`          |
 | commit-and-tag-version fails on commit | Use `--skip.commit --skip.tag`, then commit manually                  |
 | `.semver` needs trailing newline       | Some tools strip it; configure `end-of-file-fixer` to exclude         |
-| Personal email in CODE_OF_CONDUCT     | Use obfuscated format: `hi [at] example [dot] com`                    |
+| Personal email in CODE_OF_CONDUCT      | Use obfuscated format: `hi [at] example [dot] com`                    |
 | Personal data in git history           | `git rm` only removes from HEAD; use `git filter-repo` to purge       |
 | Personal paths in examples             | Use generic paths (`~/Projects/...`) not real usernames               |
 | Squash doesn't purge history           | Squash only rewrites HEAD chain; old refs survive in reflog/remotes   |
-| `.gitkeep` for empty directories       | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks   |
+| `.gitkeep` for empty directories       | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks    |

@@ -1,32 +1,30 @@
 # Anti-Corruption Layer pattern
 
-Protect your domain model from external system shapes by translating between
-external representations and domain types at the boundary.
+Protect your domain model from external system shapes by translating between external
+representations and domain types at the boundary.
 
 ## Problem
 
-Your application integrates with an external service whose data model you do not
-control. The external API returns data in a shape that does not match your domain
-model: different field names, different granularity, combined or split concepts,
-or entirely different structures.
+Your application integrates with an external service whose data model you do not control. The
+external API returns data in a shape that does not match your domain model: different field names,
+different granularity, combined or split concepts, or entirely different structures.
 
-If the domain adapts to the external shape, every change in the external API
-ripples through your business logic. The domain becomes a mirror of someone else's
-data model instead of reflecting your own business concepts.
+If the domain adapts to the external shape, every change in the external API ripples through your
+business logic. The domain becomes a mirror of someone else's data model instead of reflecting your
+own business concepts.
 
 ## Pattern
 
-Place an **Anti-Corruption Layer (ACL)** between the external system and your
-domain. The ACL translates external data shapes into domain types on the way in,
-and domain types into external shapes on the way out.
+Place an **Anti-Corruption Layer (ACL)** between the external system and your domain. The ACL
+translates external data shapes into domain types on the way in, and domain types into external
+shapes on the way out.
 
-The domain defines what it needs through a **port interface**. The ACL sits in
-the infrastructure layer, implements that port, and handles all translation.
+The domain defines what it needs through a **port interface**. The ACL sits in the infrastructure
+layer, implements that port, and handles all translation.
 
-For search operations, the port uses the **Criteria pattern**: a domain value
-object that encapsulates filters, sorting, and pagination. The ACL translates
-domain criteria into whatever query format the external API requires (query
-params, POST body, GraphQL filters, etc.).
+For search operations, the port uses the **Criteria pattern**: a domain value object that
+encapsulates filters, sorting, and pagination. The ACL translates domain criteria into whatever
+query format the external API requires (query params, POST body, GraphQL filters, etc.).
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -93,9 +91,9 @@ params, POST body, GraphQL filters, etc.).
 
 ## Why Criteria, not specific query methods
 
-Adding `find_by_city()` to the port works for one filter. But then you need
-`find_by_capacity()`, then `find_by_city_and_capacity()`, then
-`find_by_city_and_capacity_and_country()` — combinatorial explosion.
+Adding `find_by_city()` to the port works for one filter. But then you need `find_by_capacity()`,
+then `find_by_city_and_capacity()`, then `find_by_city_and_capacity_and_country()` — combinatorial
+explosion.
 
 The Criteria pattern solves this:
 
@@ -119,9 +117,9 @@ VenueSearchCriteria:                      # domain value object
     # adding a new filter = adding a field, NOT changing the port
 ```
 
-The Criteria is a **domain value object** — it lives in the domain layer and
-uses domain types (`PositiveInteger`, `CountryCode`, `DateRange`), not API query
-strings. The ACL translates it to whatever the external API needs.
+The Criteria is a **domain value object** — it lives in the domain layer and uses domain types
+(`PositiveInteger`, `CountryCode`, `DateRange`), not API query strings. The ACL translates it to
+whatever the external API needs.
 
 ## When to use
 
@@ -134,7 +132,7 @@ strings. The ACL translates it to whatever the external API needs.
 ## Layers involved
 
 | Layer                      | Role                          | Contains                                                                |
-|----------------------------|-------------------------------|-------------------------------------------------------------------------|
+| -------------------------- | ----------------------------- | ----------------------------------------------------------------------- |
 | `domain/`                  | Defines what the domain needs | `VenueSearchCriteria` (value object) + `VenueProvider` (port interface) |
 | `infrastructure/external/` | Implements the ACL            | `TicketmasterVenueProvider` with translation logic                      |
 | `test/doubles/`            | Provides test implementation  | `InMemoryVenueProvider`                                                 |
@@ -170,37 +168,36 @@ Venue {
 }
 ```
 
-The ACL maps `venue_name` to `name`, `max_attendees` to a `PositiveInteger` value
-object, and combines the flat address fields into a structured `Address` value
-object. The domain never sees the external shape.
+The ACL maps `venue_name` to `name`, `max_attendees` to a `PositiveInteger` value object, and
+combines the flat address fields into a structured `Address` value object. The domain never sees the
+external shape.
 
-When searching, the ACL translates a `VenueSearchCriteria { city: "Madrid",
-min_capacity: 200 }` into the external API call `GET /venues?city=madrid&min_seats=200`.
-The domain expresses intent; the ACL handles the protocol.
+When searching, the ACL translates a `VenueSearchCriteria { city: "Madrid", min_capacity: 200 }`
+into the external API call `GET /venues?city=madrid&min_seats=200`. The domain expresses intent; the
+ACL handles the protocol.
 
 ## Common mistakes
 
-**Letting external types leak into the domain**: If use cases receive objects
-typed as `ExternalVenueResponse`, the domain is coupled to the external API.
-The ACL must return domain types only.
+**Letting external types leak into the domain**: If use cases receive objects typed as
+`ExternalVenueResponse`, the domain is coupled to the external API. The ACL must return domain types
+only.
 
-**No ACL — domain adapts to external shapes**: The domain model mirrors the
-external API structure. When the external API changes its field names or adds
-a wrapper object, domain logic breaks. The translation layer is not optional.
+**No ACL — domain adapts to external shapes**: The domain model mirrors the external API structure.
+When the external API changes its field names or adds a wrapper object, domain logic breaks. The
+translation layer is not optional.
 
-**Hardcoding query methods instead of Criteria**: Adding `find_by_X()` for each
-filter creates combinatorial explosion in the port interface. Use a Criteria value
-object that can be extended with new filters without changing the port signature.
+**Hardcoding query methods instead of Criteria**: Adding `find_by_X()` for each filter creates
+combinatorial explosion in the port interface. Use a Criteria value object that can be extended with
+new filters without changing the port signature.
 
-**ACL with business logic**: The ACL should only translate shapes. Validation
-rules ("capacity must be positive") belong in the domain's value objects.
-Filtering logic ("only venues in active cities") belongs in the use case.
+**ACL with business logic**: The ACL should only translate shapes. Validation rules ("capacity must
+be positive") belong in the domain's value objects. Filtering logic ("only venues in active cities")
+belongs in the use case.
 
-**One monolithic ACL for multiple external services**: Each external service
-should have its own ACL implementing its own port. A single class translating
-for three different APIs becomes unmaintainable.
+**One monolithic ACL for multiple external services**: Each external service should have its own ACL
+implementing its own port. A single class translating for three different APIs becomes
+unmaintainable.
 
-**Not testing the translation**: ACL translation logic is a common source of
-bugs (wrong field mapping, off-by-one in type conversion). Each ACL should have
-unit tests that verify the translation from external shapes to domain types,
-using recorded API responses as fixtures.
+**Not testing the translation**: ACL translation logic is a common source of bugs (wrong field
+mapping, off-by-one in type conversion). Each ACL should have unit tests that verify the translation
+from external shapes to domain types, using recorded API responses as fixtures.

@@ -2,43 +2,42 @@
 # An Event belongs to exactly one Venue and progresses through a
 # linear lifecycle: draft → published → completed (or cancelled).
 
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: 'https://json-schema.org/draft/2020-12/schema'
 $id: event
 
 type: object
 properties:
-
   id:
-    $ref: "common.yaml#/$defs/UUID"
+    $ref: 'common.yaml#/$defs/UUID'
 
   title:
     type: string
     minLength: 1
-    description: "Human-readable event name shown on listings and tickets."
+    description: 'Human-readable event name shown on listings and tickets.'
 
   description:
     type: string
-    description: "Optional rich-text description for the event detail page."
+    description: 'Optional rich-text description for the event detail page.'
 
   # Every event is hosted at a single venue. The venue defines the
   # physical constraints (capacity, sections) that the event inherits.
   venueId:
-    $ref: "common.yaml#/$defs/UUID"
+    $ref: 'common.yaml#/$defs/UUID'
 
   startsAt:
-    $ref: "common.yaml#/$defs/DateTime"
-    description: "Doors-open or show-start time."
+    $ref: 'common.yaml#/$defs/DateTime'
+    description: 'Doors-open or show-start time.'
 
   endsAt:
-    $ref: "common.yaml#/$defs/DateTime"
-    description: "Must be after startsAt; enforced by domain validation."
+    $ref: 'common.yaml#/$defs/DateTime'
+    description: 'Must be after startsAt; enforced by domain validation.'
 
   # Capacity may be less than venue.totalCapacity when only part of
   # the venue is used (e.g. a theater blocking the upper balcony).
   capacity:
     type: integer
     minimum: 1
-    description: "Maximum number of tickets that can be issued."
+    description: 'Maximum number of tickets that can be issued.'
 
   # Status lifecycle:
   #   draft      → organizer is still editing; not visible to buyers
@@ -47,6 +46,6 @@ properties:
   #   completed  → event has taken place; no further ticket actions
   status:
     type: string
-    enum: [ draft, published, cancelled, completed ]
+    enum: [draft, published, cancelled, completed]
 
-required: [ id, title, venueId, startsAt, endsAt, capacity, status ]
+required: [id, title, venueId, startsAt, endsAt, capacity, status]
