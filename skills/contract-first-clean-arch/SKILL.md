@@ -10,9 +10,8 @@ description: >-
   architecture", "vertical slicing", "criteria pattern", or "bounded contexts".
 license: MIT
 metadata:
-  author: Jose R. Prieto <hi at joserprieto dot es>
+  author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.3.0'
-  status: STABLE
 ---
 
 # Contract-First + Clean Architecture
@@ -352,37 +351,6 @@ The testing strategy is NOT a methodology choice — it is a **consequence of th
 Ports & adapters determines what is testable, how fast, and at what granularity. The distribution of
 tests emerges from the layers:
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  DOMAIN (entities, value objects, pure rules)                │
-│  → Unit tests. No dependencies, no injection needed.         │
-│  → Test state machines, invariants, validation.              │
-│  → Fast: microseconds. Run thousands.                        │
-├─────────────────────────────────────────────────────────────┤
-│  APPLICATION (orchestration through ports)                    │
-│  → Tests with in-memory doubles injected via constructor.    │
-│  → Test full business operations: load → mutate → persist.   │
-│  → Fast: milliseconds (in-memory, no I/O). This is where    │
-│    the architecture pays off — the doubles make these tests  │
-│    as fast as unit tests but with much higher confidence.     │
-├─────────────────────────────────────────────────────────────┤
-│  INFRASTRUCTURE (adapters against real systems)               │
-│  → Integration tests. Real database, real API sandbox.       │
-│  → Test that SQL is correct, that HTTP client handles         │
-│    edge cases, that serialization round-trips.                │
-│  → Slow: seconds. Run fewer, targeted.                       │
-├─────────────────────────────────────────────────────────────┤
-│  FULL SYSTEM (everything wired)                               │
-│  → E2E tests. Real server, real database, real everything.   │
-│  → Test only critical user journeys.                          │
-│  → Slowest: seconds to minutes. Run fewest.                  │
-├─────────────────────────────────────────────────────────────┤
-│  CONTRACTS (schema ↔ generated types alignment)               │
-│  → Contract tests. Verify generated types match schemas.     │
-│  → Run in CI. Separate concern from application tests.       │
-└─────────────────────────────────────────────────────────────┘
-```
-
 | Layer          | What to test                              | How                        | Speed           |
 | -------------- | ----------------------------------------- | -------------------------- | --------------- |
 | Domain         | State machines, invariants, value objects | Direct calls, no DI        | Microseconds    |
@@ -523,39 +491,8 @@ When evaluating a project, score each sub-concern 1-5:
 
 ## Examples directory
 
-```
-examples/
-├── contracts/                    # Real YAML schemas + API specs (SSOT)
-│   ├── schemas/                  # JSON Schema Draft 2020-12
-│   │   ├── common.yaml           # Money, UUID, DateTime, SeatLocation
-│   │   ├── event.yaml            # Event entity + EventStatus
-│   │   ├── ticket.yaml           # Ticket + TicketStatus lifecycle
-│   │   ├── order.yaml            # Order aggregate + OrderStatus
-│   │   └── venue.yaml            # Venue with sections
-│   ├── specs/
-│   │   ├── openapi.yaml          # OpenAPI 3.1.0 — REST endpoints
-│   │   └── asyncapi.yaml         # AsyncAPI 3.0.0 — event channels
-│   └── README.md
-│
-├── patterns/                     # Language-agnostic architecture patterns
-│   ├── contract-approaches.md    # Decision matrix for contract strategies
-│   ├── project-structure.md      # Abstract layer structure
-│   ├── repository-pattern.md     # Port → multiple implementations
-│   ├── criteria-pattern.md       # Composable search via domain value object
-│   ├── acl-pattern.md            # Anti-Corruption Layer for external APIs
-│   ├── strategy-pattern.md       # Runtime algorithm selection
-│   └── infrastructure-doubling.md # Test doubles for infrastructure ports
-│
-└── snippets/                     # Architecture patterns as TypeScript notation
-    ├── README.md                 # Language-agnostic disclaimer
-    ├── entity-with-state-machine.ts
-    ├── value-object-immutable.ts
-    ├── port-interface.ts         # With Criteria pattern
-    ├── repository-implementation.ts
-    ├── acl-translation.ts        # With Criteria translation
-    ├── orchestration.ts
-    ├── composition-root.ts
-    ├── test-double-stub-spy.ts
-    ├── object-mother.ts          # With faker usage
-    └── frontend-store-with-di.ts # React/Zustand-specific
-```
+See `examples/` for complete working examples organized in three subdirectories:
+
+- **`contracts/`** — Real YAML schemas (JSON Schema Draft 2020-12), OpenAPI 3.1.0, and AsyncAPI 3.0.0 specs
+- **`patterns/`** — Language-agnostic architecture patterns (criteria, ACL, repository, strategy, infrastructure doubling)
+- **`snippets/`** — Architecture patterns as TypeScript notation (entity, value object, port, repository, composition root, test doubles, Object Mother, frontend store)

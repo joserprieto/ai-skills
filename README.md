@@ -21,9 +21,9 @@ All skills follow the [Agent Skills](https://agentskills.io/) open specification
 
 ## Available Skills
 
-| Skill                                                          | Description                                                                        |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [enterprise-repo-setup](skills/enterprise-repo-setup/SKILL.md) | Professional OSS repository setup with CI/CD, linting, releases, and documentation |
+| Skill                                            | Description                                                                        |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [repo-kickstart](skills/repo-kickstart/SKILL.md) | Professional OSS repository setup with CI/CD, linting, releases, and documentation |
 
 ## Quick Start
 
@@ -44,7 +44,7 @@ make check/deps
 1. Copy the skill directory into your Claude Code skills path:
 
    ```bash
-   cp -r skills/enterprise-repo-setup ~/.claude/skills/
+   cp -r skills/repo-kickstart ~/.claude/skills/
    ```
 
 2. The skill's `description` field triggers auto-loading when the conversation matches.
@@ -72,7 +72,7 @@ make check/deps
 ```
 ai-skills/
 ├── skills/                 # Reusable AI agent skills
-│   └── enterprise-repo-setup/
+│   └── repo-kickstart/
 │       └── SKILL.md        # Skill definition
 ├── .github/                # CI/CD workflows, issue templates, automation scripts
 │   ├── workflows/          # GitHub Actions (CI, label sync)

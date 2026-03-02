@@ -1,387 +1,455 @@
 ---
 name: drawio-uml-shapes
 description: >-
-  Use when generating or editing draw.io diagrams programmatically or via XML. Provides correct
-  shape mappings for UML deployment, AWS infrastructure groups, edge routing, and Avincis branding.
-  Also use when user says "draw.io shapes", "UML diagram", "deployment diagram", "draw.io styles",
-  "drawio XML", "orthogonal routing", "AWS group shapes", or "diagram generator".
-license: MIT
+  Use when generating or editing draw.io diagrams with UML shapes. Provides correct
+  shape-to-style mappings for deployment, component, sequence, state machine, package,
+  and class diagrams. Also use when asking about "draw.io shapes", "UML diagram styles",
+  "drawio XML generation", "diagram shape reference", or "UML notation in draw.io".
 metadata:
-  author: Jose R. Prieto <hi at joserprieto dot es>
-  version: '0.1.0'
-  status: APPROVED
+  author: Jose R. Prieto (hi [at] joserprieto [dot] es)
+  version: '0.4.0'
 ---
 
-# Draw.io UML & AWS Shape Reference
+# Draw.io UML Shape Reference
 
-**STATUS: DRAFT v0.1.0** - Verified against draw.io 24.x desktop. Style strings tested in
-`build-einforex-diagrams.py` generating 15-tab architecture documentation.
+Brand-agnostic UML shape reference for draw.io XML generation. Covers six UML diagram types
+with correct shape-to-style mappings verified against draw.io 24.x desktop.
 
-Provides exact draw.io style strings for UML 2.5 deployment diagrams, AWS infrastructure groups,
-edge routing, and Avincis corporate branding.
+**Core principle:** Shapes encode UML semantics. Colors encode project semantics. Never mix them.
 
-## Workflow
+## When to use
+
+- Generating or editing draw.io diagrams with UML notation
+- Need correct draw.io shape names and style strings for UML elements
+- Building diagram generators or templates programmatically
+- Validating existing diagrams against UML standards
+
+## When NOT to use
+
+- Non-UML diagram types (ERD, BPMN, flowcharts, mind maps)
+- Brand or styling decisions (load your project's brand skill instead)
+- AWS/Azure/GCP infrastructure icons (use cloud-specific shape libraries)
+
+## Companion file
+
+See `shapes-reference.md` for the complete shape catalog with all style strings and XML examples.
+
+## Supported diagram types
+
+Deployment, Component, Sequence, State Machine, Package/Class, Activity.
+
+## Semantic Color System
+
+This skill uses a 3-layer architecture to separate UML semantics from visual branding:
+
+```
+Layer 3: Brand Override (optional) — your project's brand skill
+Layer 2: Semantic Roles (this skill) — category-appserver, semantic-critical, etc.
+Layer 1: Draw.io Style Strings (shapes-reference.md) — exact shape+color combos
+```
+
+Layer 1 defines the raw draw.io style properties. Layer 2 assigns meaningful names to
+color combinations so diagrams communicate intent. Layer 3 lets any project override
+the defaults with its own brand palette without touching diagram structure.
+
+### Semantic role table
+
+All defaults use the Tailwind Slate palette for a clean, neutral appearance.
+
+| Role | Purpose | Default Fill | Default Stroke |
+|------|---------|-------------|---------------|
+| `surface-device` | Device backgrounds | `#F1F5F9` | `#475569` |
+| `surface-default` | Artifacts, default fills | `#FFFFFF` | `#475569` |
+| `surface-muted` | Subtle backgrounds | `#F8FAFC` | `#CBD5E1` |
+| `text-primary` | Main text | — | `#1E293B` |
+| `text-secondary` | Secondary text | — | `#475569` |
+| `category-appserver` | App servers, JVMs, runtimes | `#FFFBEB` | `#D97706` |
+| `category-database` | Database engines | `#EBF5FB` | `#2563EB` |
+| `category-broker` | Message brokers | `#F5F3FF` | `#7C3AED` |
+| `category-proxy` | Reverse proxies, LBs | `#F0FDF4` | `#16A34A` |
+| `category-container` | Container runtimes | `#FFF7ED` | `#EA580C` |
+| `category-infra` | Infra daemons, schedulers | `#F1F5F9` | `#64748B` |
+| `semantic-critical` | EOL, alerts, failures | `#FEF2F2` | `#DC2626` |
+| `semantic-warning` | Warnings, caution | `#FFFBEB` | `#D97706` |
+| `semantic-success` | OK, healthy, target | `#F0FDF4` | `#16A34A` |
+| `semantic-info` | Informational | `#EFF6FF` | `#2563EB` |
+| `special-deployspec` | Deployment specifications | `#FEF3C7` | `#D97706` |
+| `special-schema` | Database schemas | `#EBF5FB` | `#2563EB` |
+
+### Typography defaults
+
+- Font family: `Sans-serif` (brand layer overrides this)
+- Font stack for SVG export: `Sans-serif, Helvetica, Arial, sans-serif`
+- Typography scale:
+  - Titles: 14-16px, bold (`fontStyle=1`)
+  - Elements: 9-11px, regular
+  - Details and edge labels: 7-8px
+
+### Brand override mechanism
+
+To apply your project's brand, load a brand skill that provides a mapping from semantic
+roles to your brand's color tokens and font family. The brand skill overrides the defaults
+above without modifying any diagram structure or UML shape selections.
+
+A brand skill should provide a table mapping semantic roles to brand tokens:
+
+| Semantic Role | Brand Token | Brand Value |
+|---|---|---|
+| `surface-device` | `brand.primary.bg` | `#yourcolor` |
+| `text-primary` | `brand.primary.text` | `#yourcolor` |
+| `semantic-critical` | `brand.danger.bg` | `#yourcolor` |
+| `category-database` | `brand.accent.bg` | `#yourcolor` |
+
+The brand skill replaces only `fillColor`, `strokeColor`, `fontColor`, and `fontFamily`
+values. Shape names, geometry, and structural properties remain unchanged.
+
+## Decision tree: which diagram?
 
 ```dot
-digraph drawio_flow {
+digraph which_diagram {
   rankdir=TB;
-  "Identify diagram type" -> "Select shape category";
-  "Select shape category" -> "Copy exact style string";
-  "Copy exact style string" -> "Set geometry (x,y,w,h)";
-  "Set geometry (x,y,w,h)" -> "Configure edge routing";
-  "Configure edge routing" -> "Apply branding tokens";
-  "Apply branding tokens" -> "Export (SVG/PNG)";
+  "What are you documenting?" [shape=diamond];
+  "Physical/virtual topology" [shape=box,label="Deployment §1"];
+  "Logical modules and interfaces" [shape=box,label="Component §2"];
+  "Message flow over time" [shape=box,label="Sequence §3"];
+  "Entity lifecycle" [shape=box,label="State Machine §4"];
+  "Code structure" [shape=box,label="Package/Class §5"];
+  "Process workflow" [shape=box,label="Activity §6"];
+  "What are you documenting?" -> "Physical/virtual topology" [label="hardware, VMs, containers"];
+  "What are you documenting?" -> "Logical modules and interfaces" [label="services, APIs"];
+  "What are you documenting?" -> "Message flow over time" [label="request/response, auth"];
+  "What are you documenting?" -> "Entity lifecycle" [label="states, transitions"];
+  "What are you documenting?" -> "Code structure" [label="classes, packages"];
+  "What are you documenting?" -> "Process workflow" [label="steps, decisions"];
 }
 ```
 
-## 1. UML Deployment Target (Node)
+| Intent | Diagram | Key Elements |
+|--------|---------|-------------|
+| Where does software run? | Deployment | Device, ExecutionEnvironment, Artifact |
+| How do modules connect? | Component | Component, Interface, Port |
+| How do actors interact over time? | Sequence | Lifeline, Message, Combined Fragment |
+| What states does an entity traverse? | State Machine | State, Transition, Pseudostate |
+| How is code organized? | Package/Class | Package, Class, Association |
+| What steps form a process? | Activity | Action, Decision, Fork/Join |
 
-The 3D cube representing a physical or virtual machine. **CORRECT** shape for UML deployment.
+## Quick reference by diagram type
 
-```
-shape=cube;size=10;direction=south;boundedLbl=1;
-verticalAlign=top;align=left;spacingLeft=5;
-whiteSpace=wrap;html=1;recursiveResize=0;
-fillColor=#E5E7F1;strokeColor=#242846;
-strokeWidth=1;fontFamily=Trebuchet MS;fontSize=10;
-fontColor=#242846;fontStyle=1;
-```
+### Deployment diagram
 
-**Key parameters:**
+**Purpose:** Show where software artifacts run on physical or virtual infrastructure.
 
-| Parameter           | Value   | Purpose                                                         |
-| ------------------- | ------- | --------------------------------------------------------------- |
-| `shape=cube`        | native  | 3D cube with perspective (NOT `mxgraph.uml.node` which is flat) |
-| `size=10`           | pixels  | Depth of the 3D face                                            |
-| `direction=south`   | -       | Top face visible (standard UML deployment view)                 |
-| `boundedLbl=1`      | boolean | Label stays within cube body                                    |
-| `recursiveResize=0` | boolean | Children don't auto-resize with parent                          |
+**Key elements:**
 
-**Variants:**
+| Element | draw.io Shape | UML |
+|---------|--------------|-----|
+| Device | `shape=cube;direction=south;size=10` | 2.0+ |
+| ExecutionEnvironment | `shape=mxgraph.uml.component` | 2.0+ |
+| Artifact | `shape=mxgraph.uml.artifact` | 2.0+ |
+| DeploymentSpec | `shape=mxgraph.uml.artifact` (italic) | 2.0+ |
+| Database [custom] | `shape=cylinder3;size=8` | custom |
+| Schema [custom] | `shape=mxgraph.uml.artifact` | custom |
 
-- **EOL/Critical**: `fillColor=#FFF1EE;strokeColor=#EB4529;fontColor=#EB4529;strokeWidth=2;`
-- **OK/Standard**: `fillColor=#E5E7F1;strokeColor=#242846;fontColor=#242846;strokeWidth=1;`
+**Containment rules:**
 
-**Common mistake**: Using `shape=mxgraph.uml.node` - this renders a flat rectangle with a small 3D
-tab, not a proper cube. Always use `shape=cube`.
+- Device can contain ExecutionEnvironment, Artifact, other Devices
+- ExecutionEnvironment can contain Artifact, other ExecutionEnvironments
+- Artifact can contain nested Artifacts
+- DeploymentSpec attaches to Artifact (usually as sibling with dependency edge)
+- Database is a Device variant (cylinder representation)
+- Schema nests inside Database
 
-## 2. UML Component
+See `shapes-reference.md` §1 for all style strings and XML examples.
 
-```
-shape=mxgraph.uml.component;whiteSpace=wrap;html=1;
-fillColor=#FFFFFF;strokeColor=#242846;
-strokeWidth=1;fontFamily=Trebuchet MS;fontSize=9;
-fontColor=#242846;verticalAlign=top;
-```
+### Component diagram
 
-This is correct as-is. The `mxgraph.uml.component` shape renders the standard UML component notation
-with the two small rectangles on the left side.
+**Purpose:** Show logical modules, their interfaces, and dependencies.
 
-**Variant - Critical/EOL:**
+**Key elements:**
 
-```
-fillColor=#FFF1EE;strokeColor=#EB4529;strokeWidth=2;fontColor=#EB4529;fontStyle=1;
-```
+| Element | draw.io Shape | UML |
+|---------|--------------|-----|
+| Component | `shape=mxgraph.uml.component` | 1.x+ |
+| Subsystem | `shape=folder;tabWidth=80` | 2.0+ |
+| Provided Interface | `ellipse` (16px) or edge `endArrow=oval` | 2.0+ |
+| Required Interface | edge `endArrow=halfCircle` | 2.0+ |
+| Port | `shape=mxgraph.uml.port` | 2.0+ |
 
-## 3. UML Artifact
+**Containment rules:**
 
-```
-shape=mxgraph.uml.artifact;whiteSpace=wrap;html=1;
-fillColor=#FFFFFF;strokeColor=#242846;
-fontFamily=Trebuchet MS;fontSize=8;fontColor=#242846;
-```
+- Subsystem can contain Components and other Subsystems
+- Component can contain other Components
+- Port attaches to the boundary of a Component
+- Provided Interface connects from a Port or Component boundary
+- Required Interface connects to a Port or Component boundary
 
-Renders the standard UML artifact with the folded corner.
+See `shapes-reference.md` §2 for all style strings and XML examples.
 
-## 4. AWS Infrastructure Group Shapes
+### Sequence diagram
 
-Hierarchical containment for infrastructure boundaries. These use the AWS4 shape library built into
-draw.io.
+**Purpose:** Show message flow between participants over time.
 
-### 4.1 Corporate Datacenter (Provider level)
+**Key elements:**
 
-For top-level providers like "R (Private Cloud)" or "CESGA".
+| Element | draw.io Shape | UML |
+|---------|--------------|-----|
+| Lifeline | `shape=umlLifeline` | 1.x+ |
+| Synchronous Message | edge `endArrow=block;endFill=1` | 1.x+ |
+| Asynchronous Message | edge `endArrow=open;endFill=0` | 1.x+ |
+| Reply Message | edge `dashed=1;endArrow=open` | 1.x+ |
+| Combined Fragment | `shape=umlFrame` | 2.0+ |
+| Activation Box | thin rect on lifeline | 1.x+ |
+| Destruction | `shape=umlDestroy` | 2.0+ |
 
-```
-shape=mxgraph.aws4.group;
-grIcon=mxgraph.aws4.group_corporate_data_center;
-verticalAlign=top;align=left;spacingLeft=30;
-dashed=0;fillColor=none;strokeColor=#242846;
-strokeWidth=2;
-fontFamily=Trebuchet MS;fontSize=12;fontColor=#242846;
-fontStyle=1;whiteSpace=wrap;html=1;
-```
+**Containment rules:**
 
-### 4.2 Region (IaaS/Hypervisor level)
+- Lifeline is a top-level participant (uses `container=1`)
+- Activation Box is a child of Lifeline
+- Messages connect between Lifelines or Activation Boxes
+- Combined Fragment contains message sequences
+- Destruction marker is placed at the end of a Lifeline
 
-For vSphere, OpenStack, or cloud regions.
+See `shapes-reference.md` §3 for all style strings and XML examples.
 
-```
-shape=mxgraph.aws4.group;
-grIcon=mxgraph.aws4.group_region;
-verticalAlign=top;align=left;spacingLeft=30;
-dashed=1;fillColor=none;strokeColor=#90BAE4;
-strokeWidth=2;
-fontFamily=Trebuchet MS;fontSize=11;fontColor=#242846;
-fontStyle=1;whiteSpace=wrap;html=1;
-```
+### State machine diagram
 
-### 4.3 VPC (Virtual Data Center)
+**Purpose:** Show the lifecycle states and transitions of an entity.
 
-For VDC or VPC boundaries.
+**Key elements:**
 
-```
-shape=mxgraph.aws4.group;
-grIcon=mxgraph.aws4.group_vpc;
-verticalAlign=top;align=left;spacingLeft=30;
-dashed=0;fillColor=none;strokeColor=#009638;
-strokeWidth=2;
-fontFamily=Trebuchet MS;fontSize=11;fontColor=#242846;
-fontStyle=1;whiteSpace=wrap;html=1;
-```
+| Element | draw.io Shape | UML |
+|---------|--------------|-----|
+| Simple State | `rounded=1;arcSize=40` | 1.x+ |
+| Initial Pseudostate | `ellipse` (filled, 20px) | 1.x+ |
+| Final State | `shape=doubleCircle` | 1.x+ |
+| Composite State | `swimlane;rounded=1` | 1.x+ |
+| Choice | `rhombus` | 1.x+ |
+| Fork/Join | filled bar (4px height) | 1.x+ |
+| History (H/H*) | `ellipse` with label | 1.x+ |
 
-### 4.4 Security Group (Subnet/Segment)
+**Containment rules:**
 
-For network segments or security zones.
+- Composite State can contain Simple States, pseudostates, and nested Composite States
+- Initial Pseudostate must have exactly one outgoing transition
+- Final State has no outgoing transitions
+- Fork/Join bars split or merge concurrent transitions
+- History pseudostates exist only inside Composite States
 
-```
-shape=mxgraph.aws4.group;
-grIcon=mxgraph.aws4.group_security_group;
-verticalAlign=top;align=left;spacingLeft=30;
-dashed=0;fillColor=#E6F6F712;strokeColor=#EB4529;
-strokeWidth=1;
-fontFamily=Trebuchet MS;fontSize=10;fontColor=#242846;
-whiteSpace=wrap;html=1;
-```
+See `shapes-reference.md` §4 for all style strings and XML examples.
 
-### 4.5 Corporate Datacenter - Critical/EOL
+### Package/Class diagram
 
-Red variant for boundaries highlighting problems.
+**Purpose:** Show code organization, class structure, and relationships.
 
-```
-shape=mxgraph.aws4.group;
-grIcon=mxgraph.aws4.group_corporate_data_center;
-verticalAlign=top;align=left;spacingLeft=30;
-dashed=0;fillColor=#FFF1EE;strokeColor=#EB4529;
-strokeWidth=2;
-fontFamily=Trebuchet MS;fontSize=12;fontColor=#EB4529;
-fontStyle=1;whiteSpace=wrap;html=1;
-```
+**Key elements:**
 
-**Nesting hierarchy**: Provider > IaaS > VDC > Subnet
+| Element | draw.io Shape | UML |
+|---------|--------------|-----|
+| Package | `shape=folder;tabWidth=80` | 1.x+ |
+| Class | `swimlane;startSize=26` | 1.x+ |
+| Interface | `swimlane;startSize=40` (with stereotype) | 1.x+ |
+| Generalization | edge `endArrow=block;endFill=0` | 1.x+ |
+| Composition | edge `endArrow=diamond;endFill=1` | 1.x+ |
+| Aggregation | edge `endArrow=diamond;endFill=0` | 1.x+ |
+| Realization | edge `dashed=1;endArrow=block;endFill=0` | 1.x+ |
 
-**Key parameter**: `spacingLeft=30` reserves space for the group icon.
+**Containment rules:**
 
-## 5. Edge Routing
+- Package can contain Classes, Interfaces, and other Packages
+- Class has compartments: name, attributes, methods (separated by `line` cells)
+- Interface is a Class variant with `<<interface>>` stereotype
+- Generalization, Composition, Aggregation are edges between Classes
 
-### 5.1 Orthogonal (RECOMMENDED DEFAULT)
+See `shapes-reference.md` §5 for all style strings and XML examples.
 
-All edges should use orthogonal routing for clean, professional diagrams.
+### Activity diagram
 
-```
-edgeStyle=orthogonalEdgeStyle;rounded=0;
-orthogonalLoop=1;jettySize=auto;html=1;
-endArrow=open;endFill=0;
-strokeColor=#242846;strokeWidth=1;
-fontFamily=Trebuchet MS;fontSize=8;fontColor=#242846;
-```
+**Purpose:** Show process workflows, decisions, and parallel execution.
 
-**Variants:**
+**Key elements:**
 
-| Variant       | Arrow                       | Extra                           |
-| ------------- | --------------------------- | ------------------------------- |
-| Default       | `endArrow=open;endFill=0;`  | Open arrowhead (UML dependency) |
-| Directed flow | `endArrow=block;endFill=1;` | Filled arrowhead (data flow)    |
-| Dashed        | add `dashed=1;`             | Optional dependency             |
-| No arrow      | `endArrow=none;`            | Association                     |
+| Element | draw.io Shape | UML |
+|---------|--------------|-----|
+| Action | `rounded=1;arcSize=20` | 2.0+ |
+| Decision/Merge | `rhombus` | 1.x+ |
+| Fork/Join | filled bar | 1.x+ |
+| Initial | `ellipse` (filled, 20px) | 1.x+ |
+| Final | `shape=doubleCircle` | 1.x+ |
+| Swimlane | `shape=swimlane;startSize=30` | 1.x+ |
+| Signal Send | `shape=mxgraph.uml25.sendSig` | 2.0+ |
+| Signal Receive | `shape=mxgraph.uml25.recSig` | 2.0+ |
 
-### 5.2 Entity Relation
+**Containment rules:**
 
-For ER diagrams or when you need curved connections.
+- Swimlane contains Actions, Decisions, and other flow elements
+- Fork/Join bars split or merge parallel flows
+- Decision must have guards on all outgoing edges
+- Merge combines alternative flows back into one
 
-```
-edgeStyle=entityRelationEdgeStyle;rounded=1;
-orthogonalLoop=1;jettySize=auto;html=1;
-```
+See `shapes-reference.md` §6 for all style strings and XML examples.
 
-### 5.3 Isometric
+## Common elements
 
-For 3D/isometric diagrams.
+### Notes and constraints
+
+Note shape:
 
 ```
-edgeStyle=isometricEdgeStyle;elbow=vertical;
+shape=note;size=15;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;fontFamily=Sans-serif;fontSize=8;fontColor=#1E293B;
 ```
 
-**Common mistake**: Omitting `edgeStyle=orthogonalEdgeStyle` produces straight-line edges that cross
-over shapes. Always set an edgeStyle.
+Constraints use the note shape with `{constraint text}` format inside the label.
 
-## 6. UML Sequence Diagram Elements
+### Edge routing (default: orthogonal)
 
-### Lifeline
-
-```
-shape=umlLifeline;perimeter=lifelinePerimeter;
-whiteSpace=wrap;html=1;container=1;
-dropTarget=0;collapsible=0;recursiveResize=0;
-outlineConnect=0;portConstraint=eastwest;
-size=40;
-```
-
-### Frame
+All edges should use orthogonal routing unless there is a specific reason not to.
 
 ```
-shape=umlFrame;whiteSpace=wrap;html=1;
-width=200;height=40;
+edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;
 ```
 
-### Activation Box
+### Edge types table
 
-```
-fillColor=#E5E7F1;strokeColor=#242846;
-```
+| Type | endArrow | endFill | dashed | UML Meaning |
+|------|----------|---------|--------|-------------|
+| Dependency | open | 0 | 1 | "uses" |
+| Association | none | — | 0 | "connected to" |
+| Directed association | open | 0 | 0 | navigable end |
+| Generalization | block | 0 | 0 | "is-a" |
+| Realization | block | 0 | 1 | "implements" |
+| Composition | diamond | 1 | 0 | "owns" (lifecycle) |
+| Aggregation | diamond | 0 | 0 | "has" (shared) |
 
-Place as child of lifeline with narrow width (10-15px).
+### Edge label positioning
 
-## 7. UML State Machine
+- `verticalAlign=bottom` for labels above the line
+- `verticalAlign=top` for labels below the line
+- Multiplicity labels use `align=left` or `align=right` at endpoints
 
-### State
+## Definition of done
 
-```
-rounded=1;arcSize=40;whiteSpace=wrap;html=1;
-fillColor=#E5E7F1;strokeColor=#242846;
-fontFamily=Trebuchet MS;fontSize=10;fontColor=#242846;
-```
+### Deployment DoD
 
-### Initial State (filled circle)
+- [ ] Every physical/virtual host is a `<<device>>` (cube)
+- [ ] Software runtimes are `<<executionEnvironment>>` (component shape)
+- [ ] Deployable units are `<<artifact>>` with correct nesting
+- [ ] Database engines use `<<database>>` (cylinder)
+- [ ] Color roles match element categories
+- [ ] Parent-child geometry is relative to parent
+- [ ] All edges use orthogonal routing
 
-```
-ellipse;html=1;shape=mxgraph.flowchart.start_2;
-fillColor=#242846;strokeColor=#242846;
-```
+### Sequence DoD
 
-### Final State (bullseye)
+- [ ] Every participant has a lifeline
+- [ ] Messages use correct arrow types (sync=filled, async=open, reply=dashed)
+- [ ] Combined fragments have operator labels (alt, loop, opt, etc.)
+- [ ] Activation boxes span correct execution periods
+- [ ] Lifelines use `container=1`
 
-```
-ellipse;html=1;shape=doubleCircle;
-fillColor=#242846;strokeColor=#242846;
-```
+### State machine DoD
 
-## 8. UML Activity Diagram
+- [ ] Has exactly one initial pseudostate
+- [ ] All terminal paths reach a final state or are documented as non-terminating
+- [ ] Composite states have clear entry/exit transitions
+- [ ] Transitions have `trigger [guard] / effect` labels
+- [ ] Choice pseudostates have guards on all outgoing transitions
 
-### Swimlane
+### Component DoD
 
-```
-shape=swimlane;startSize=30;
-fontFamily=Trebuchet MS;fontSize=11;fontColor=#242846;fontStyle=1;
-fillColor=#E5E7F1;strokeColor=#242846;
-```
+- [ ] Components expose provided interfaces (lollipop)
+- [ ] Dependencies shown as required interfaces (socket) or dashed arrows
+- [ ] Subsystems group related components
+- [ ] Ports shown where components cross boundaries
 
-### Decision (Diamond)
+### Package/Class DoD
 
-```
-rhombus;whiteSpace=wrap;html=1;
-fillColor=#FFC100;strokeColor=#242846;
-fontFamily=Trebuchet MS;fontSize=9;fontColor=#242846;
-```
+- [ ] Classes have attributes and methods in separate compartments
+- [ ] Relationships use correct UML notation (composition ≠ aggregation)
+- [ ] Abstract classes/interfaces have italic names or stereotypes
+- [ ] Multiplicity labels present on associations
 
-## 9. UML Package
+### Activity DoD
 
-```
-shape=folder;tabWidth=40;tabHeight=14;tabPosition=left;
-whiteSpace=wrap;html=1;
-fillColor=#E5E7F1;strokeColor=#242846;
-fontFamily=Trebuchet MS;fontSize=11;fontColor=#242846;fontStyle=1;
-```
+- [ ] Has exactly one initial node
+- [ ] All terminal paths reach a final node or are documented as non-terminating
+- [ ] Decision nodes have guards on all outgoing edges
+- [ ] Fork/Join bars balance (every fork has a matching join)
+- [ ] Swimlanes partition responsibilities clearly
 
-## 10. UML Class Diagram
+## Validation checklist
 
-### Class Box (with compartments)
+Before considering a diagram complete, verify the following.
 
-```
-swimlane;fontStyle=1;align=center;startSize=26;
-html=1;whiteSpace=wrap;
-fillColor=#E5E7F1;strokeColor=#242846;
-fontFamily=Trebuchet MS;fontSize=11;fontColor=#242846;
-```
+### Structure
 
-Compartment separator:
+- [ ] XML well-formed (`<mxGraphModel>` → `<root>` → cells)
+- [ ] Cell 0 (root) and Cell 1 (default parent) present
+- [ ] No orphaned cells (every cell has valid parent)
+- [ ] Cell IDs are semantic and hyphenated (`dev-appserver`, not `cell-47`)
 
-```
-line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;
-spacingTop=-1;spacingLeft=3;spacingRight=10;rotatable=0;
-labelPosition=left;points=[];portConstraint=eastwest;
-strokeColor=#242846;
-```
+### Containment
 
-## 11. Avincis Branding Tokens
+- [ ] Parent-child relationships match UML containment rules
+- [ ] Child geometry is relative to parent (NOT absolute)
+- [ ] Container shapes have `recursiveResize=0` or `container=1` as appropriate
 
 ### Colors
 
-| Token          | Hex       | Usage                               |
-| -------------- | --------- | ----------------------------------- |
-| `C_BLUE`       | `#242846` | Primary (strokes, text, dark fills) |
-| `C_RED`        | `#EB4529` | Critical, EOL, alerts               |
-| `C_YELLOW`     | `#FFC100` | Warnings, gates, decisions          |
-| `C_GREEN`      | `#009638` | Success, target, VPC boundaries     |
-| `C_BLUE_AUX`   | `#90BAE4` | Secondary (dashed borders, regions) |
-| `C_RED_FILL`   | `#FFF1EE` | Light red background                |
-| `C_BLUE_FILL`  | `#E5E7F1` | Light blue background               |
-| `C_WHITE`      | `#FFFFFF` | Clean backgrounds                   |
-| `C_GRAY`       | `#999999` | Legends, secondary elements         |
-| `C_LIGHT_GRAY` | `#F5F5F5` | Subtle backgrounds                  |
-| `C_ORANGE`     | `#FF8C00` | High severity (not critical)        |
+- [ ] All fills/strokes use semantic role colors (no ad-hoc hex values)
+- [ ] EOL/critical elements use `semantic-critical` role
+- [ ] Category colors match element purpose
 
 ### Typography
 
-| Context     | Font         | Size          |
-| ----------- | ------------ | ------------- |
-| Titles      | Trebuchet MS | 16px, bold    |
-| Boundaries  | Trebuchet MS | 11-12px, bold |
-| Devices     | Trebuchet MS | 10px, bold    |
-| Components  | Trebuchet MS | 9px           |
-| Artifacts   | Trebuchet MS | 8px           |
-| Edges       | Trebuchet MS | 8px           |
-| Annotations | Trebuchet MS | 8-9px         |
+- [ ] Font family is `Sans-serif` (or brand override)
+- [ ] Font sizes follow scale: titles 14-16px, elements 9-11px, details 7-8px
+- [ ] Bold (`fontStyle=1`) for container labels, regular for content
 
-**Serif alternative**: Georgia (for formal documents, not diagrams).
+### Edges
 
-## 12. Gotchas
+- [ ] All edges have `edgeStyle=orthogonalEdgeStyle` (unless justified)
+- [ ] Arrow types match UML semantics (see Common Elements)
+- [ ] Labels positioned consistently
 
-### SVG Embedding
+### Page
 
-draw.io SVG exports embed fonts as `@font-face` references. If Trebuchet MS is not available on the
-viewer's system, it falls back to the browser's sans-serif default.
+- [ ] Page dimensions set (`pageWidth=1920;pageHeight=1080` for screen, `1169x827` for A3)
+- [ ] All shapes within page bounds
 
-**Mitigation**: When exporting for web embedding, add
-`fontFamily=Trebuchet MS,Helvetica,Arial,sans-serif;` to ensure graceful fallback.
+## Common mistakes
 
-### Compression
+| Mistake | Fix |
+|---------|-----|
+| Using `shape=mxgraph.uml.node` for Device | Use `shape=cube;direction=south;size=10` |
+| Using `shape=cube` for ExecutionEnvironment | Use `shape=mxgraph.uml.component` |
+| Omitting `edgeStyle=orthogonalEdgeStyle` | Always set edgeStyle — bare edges cross shapes |
+| Using `shape=mxgraph.uml25.component` | Use `shape=mxgraph.uml.component` (more reliable) |
+| Hardcoding brand colors in style strings | Use semantic role defaults; brand skill overrides |
+| Absolute geometry for nested cells | Child geometry is relative to parent |
+| Missing `recursiveResize=0` on containers | Children auto-resize unexpectedly |
+| Using `shape=ellipse` for final state | Use `shape=doubleCircle` for bullseye |
+| Omitting `container=1` on lifelines | Activation boxes won't nest correctly |
+| Using filled arrow for async messages | Async = open arrow (`endFill=0`), sync = filled (`endFill=1`) |
+| Missing `dashed=1` on reply messages | Reply messages are ALWAYS dashed |
+| Confusing aggregation and composition | Aggregation = hollow diamond, Composition = filled diamond |
 
-draw.io files can be saved compressed (deflate + base64) or uncompressed (raw XML). For programmatic
-generation, always save uncompressed:
+## Gotchas
 
-```python
-tree = ET.ElementTree(mxfile)
-ET.indent(tree, space="  ")
-tree.write(filepath, encoding="UTF-8", xml_declaration=True)
-```
+**SVG font fallback:** draw.io SVG exports reference fonts by name. If `Sans-serif` is
+unavailable, the browser uses its default. For embedded SVGs, use the full stack:
+`fontFamily=Sans-serif,Helvetica,Arial,sans-serif;`
 
-### Cell ID Conventions
+**Compression:** draw.io saves compressed (deflate+base64) by default. For programmatic
+generation, save uncompressed XML.
 
-Use semantic, hyphenated IDs: `dep-fleetweb`, `ov-provider`, `cdc-e-wal`. This makes debugging XML
-much easier than auto-generated IDs.
+**Edge routing with nested parents:** Edges between cells in different parent containers
+may route oddly. `jettySize=auto` helps calculate optimal connection points.
 
-### Parent-Child Containment
+**Cell ID uniqueness:** IDs must be unique within the entire `<root>`. Use
+`{diagram-prefix}-{element}` pattern (e.g., `dep-appserver`, `seq-user-lifeline`).
 
-When a cell has `parent="some-id"`, its geometry is **relative to the parent**. A device at
-`x=20, y=40` inside a boundary at `x=380, y=230` appears at absolute position `(400, 270)`.
+**Page size:** Default `1920x1080` fits widescreen. For print: `1169x827` (A3 landscape)
+or `827x1169` (A3 portrait).
 
-### Edge Routing with Nested Parents
-
-Edges between cells in different parent boundaries may route unexpectedly. The `jettySize=auto`
-parameter helps draw.io calculate optimal connection points.
-
-### mxGraphModel Page Size
-
-Default `pageWidth=1920;pageHeight=1080` works well for widescreen displays. For print-oriented
-diagrams, use `pageWidth=1169;pageHeight=827` (A3 landscape).
+**HTML in labels:** Style strings with `html=1` expect HTML-encoded labels:
+`&lt;b&gt;text&lt;/b&gt;` for bold, `&#xa;` for newlines.
