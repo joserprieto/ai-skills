@@ -7,7 +7,7 @@ description:
 license: MIT
 metadata:
   author: Jose R. Prieto <hi at joserprieto dot es>
-  version: '0.2.0'
+  version: '0.3.0'
   status: APPROVED
 ---
 
@@ -170,43 +170,713 @@ line-length = 72
 types = feat,fix,docs,style,refactor,test,chore,ci,perf,build,revert
 ```
 
-### Step 5: CI Pattern (Self-Healing)
+### Step 5: CI/CD — Self-Healing Pipeline
 
-The CI workflow has 3 parallel lint jobs + a summary job with **auto-issue management**.
+The CI system has 3 layers: **labels** (prerequisite), **issue management scripts** (reusable
+library), and the **CI workflow** (orchestrator). All shell scripts use a shared library for logging
+and constants.
 
-**Shell lint job:** Must use `severity: warning` to skip SC1091 (note-level, dynamic `source`
-paths):
+#### 5.1 Labels (prerequisite for CI + dependabot)
 
-```yaml
-- name: Run shellcheck
-  uses: ludeeus/action-shellcheck@2.0.0
-  with:
-    scandir: '.github/scripts'
-    severity: warning
+Labels MUST exist in the GitHub repository BEFORE the CI workflow can tag issues or dependabot can
+tag PRs. Define them in `.github/config/labels.json` and sync with a dedicated workflow.
+
+**IMPORTANT:** If a label referenced by dependabot or CI scripts does not exist, it is silently
+ignored — PRs/issues are created without labels, and search-by-label queries return no results
+(breaking auto-close). Always run the labels sync workflow first.
+
+##### `.github/config/labels.json`
+
+```json
+[
+  { "name": "ci-failure", "color": "d73a4a", "description": "Automated CI failure issue" },
+  { "name": "automated", "color": "0075ca", "description": "Created automatically by CI" },
+  {
+    "name": "job:lint-markdown",
+    "color": "e4e669",
+    "description": "Related to markdown lint CI job"
+  },
+  { "name": "job:lint-shell", "color": "e4e669", "description": "Related to shell lint CI job" },
+  {
+    "name": "job:format-check",
+    "color": "e4e669",
+    "description": "Related to format check CI job"
+  },
+  { "name": "bug", "color": "d73a4a", "description": "Something isn't working" },
+  { "name": "enhancement", "color": "a2eeef", "description": "New feature or request" },
+  {
+    "name": "documentation",
+    "color": "0075ca",
+    "description": "Improvements or additions to documentation"
+  },
+  { "name": "good first issue", "color": "7057ff", "description": "Good for newcomers" },
+  { "name": "question", "color": "d876e3", "description": "Further information is requested" },
+  { "name": "dependencies", "color": "0366d6", "description": "Dependency updates" }
+]
 ```
 
-**Auto-issue management:**
+Adapt the `job:*` labels to match your CI job names. The `dependencies` label is required for
+dependabot PRs (see [5.6 Dependabot](#56-dependabot)).
 
-**On failure (main branch only):**
+##### `.github/workflows/labels.yml`
 
-1. Each job has a corresponding `Handle X failure` step
-2. Calls `.github/scripts/ci/on-failure.sh "job-name" "${RUN_URL}"`
-3. Script checks for existing open issue (avoids duplicates)
-4. Creates issue with labels: `ci-failure`, `automated`, `job:JOB_NAME`
+```yaml
+name: Sync Labels
 
-**On success (main branch only):**
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/config/labels.json'
+  workflow_dispatch:
 
-1. Each job has a corresponding `Handle X success` step
-2. Calls `.github/scripts/ci/on-success.sh "job-name"`
-3. Script searches for open issues with matching labels
-4. Closes them with a resolution comment
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    name: Sync Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Sync labels
+        uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/config/labels.json
+          delete-other-labels: false
+```
+
+`delete-other-labels: false` preserves any manually created labels. Set to `true` for strict
+label-as-code enforcement.
+
+**First-time setup:** After the initial commit, either push to main (triggers the workflow) or run
+it manually via `gh workflow run labels.yml`. Labels must be synced BEFORE the first CI failure or
+dependabot PR.
+
+#### 5.2 Issue Management Library
+
+Scripts in `.github/scripts/issues/` provide reusable primitives for GitHub issue management.
+
+##### `.github/scripts/issues/lib/common.sh`
+
+```bash
+#!/usr/bin/env bash
+# Shared functions and constants for issue management scripts.
+# Usage: source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
+
+set -euo pipefail
+
+# ── Color Configuration ───────────────────────────────────────────────
+if [[ -t 1 ]]; then
+    readonly COLOR_RED='\033[0;31m'
+    readonly COLOR_GREEN='\033[0;32m'
+    readonly COLOR_YELLOW='\033[0;33m'
+    readonly COLOR_BLUE='\033[0;34m'
+    readonly COLOR_RESET='\033[0m'
+else
+    readonly COLOR_RED=''
+    readonly COLOR_GREEN=''
+    readonly COLOR_YELLOW=''
+    readonly COLOR_BLUE=''
+    readonly COLOR_RESET=''
+fi
+
+# ── Logging ───────────────────────────────────────────────────────────
+log_info()    { echo -e "${COLOR_BLUE}[INFO]${COLOR_RESET} $*" >&2; }
+log_error()   { echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} $*" >&2; }
+log_success() { echo -e "${COLOR_GREEN}[OK]${COLOR_RESET} $*" >&2; }
+log_warn()    { echo -e "${COLOR_YELLOW}[WARN]${COLOR_RESET} $*" >&2; }
+
+# ── Label Constants ───────────────────────────────────────────────────
+# shellcheck disable=SC2034
+readonly LABEL_CI_FAILURE="ci-failure"
+# shellcheck disable=SC2034
+readonly LABEL_AUTOMATED="automated"
+
+# Repository — CHANGE THIS to match your GitHub owner/repo
+# shellcheck disable=SC2034
+readonly REPO="OWNER/PROJECT"
+
+# ── Validation ────────────────────────────────────────────────────────
+validate_gh_auth() {
+    if ! gh auth status &>/dev/null; then
+        log_error "GitHub CLI is not authenticated."
+        log_error "Set GH_TOKEN or GITHUB_TOKEN, or run 'gh auth login'."
+        return 1
+    fi
+    log_info "GitHub CLI authentication verified."
+}
+
+require_gh_cli() {
+    if ! command -v gh &>/dev/null; then
+        log_error "'gh' CLI is not installed. See: https://cli.github.com/"
+        return 1
+    fi
+}
+
+check_prerequisites() {
+    require_gh_cli
+    validate_gh_auth
+}
+```
+
+**IMPORTANT:** Replace `OWNER/PROJECT` in the `REPO` constant with the actual GitHub owner/repo.
+
+##### `.github/scripts/issues/create.sh`
+
+```bash
+#!/usr/bin/env bash
+# Creates a GitHub issue. Prints issue number to stdout.
+# Usage: create.sh --title "..." --body "..." --labels "label1,label2"
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "${SCRIPT_DIR}/lib/common.sh"
+
+TITLE="" BODY="" LABELS=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --title)  TITLE="$2";  shift 2 ;;
+        --body)   BODY="$2";   shift 2 ;;
+        --labels) LABELS="$2"; shift 2 ;;
+        *) log_error "Unknown argument: $1"; exit 1 ;;
+    esac
+done
+
+[[ -z "${TITLE}" ]] && { log_error "Missing --title"; exit 1; }
+[[ -z "${BODY}" ]]  && { log_error "Missing --body"; exit 1; }
+
+check_prerequisites
+
+log_info "Creating issue: ${TITLE}"
+
+GH_ARGS=(issue create --repo "${REPO}" --title "${TITLE}" --body "${BODY}")
+[[ -n "${LABELS}" ]] && GH_ARGS+=(--label "${LABELS}")
+
+ISSUE_URL="$(gh "${GH_ARGS[@]}")"
+[[ -z "${ISSUE_URL}" ]] && { log_error "Failed to create issue."; exit 1; }
+
+ISSUE_NUMBER="$(basename "${ISSUE_URL}")"
+log_success "Issue #${ISSUE_NUMBER} created: ${ISSUE_URL}"
+echo "${ISSUE_NUMBER}"
+```
+
+##### `.github/scripts/issues/search.sh`
+
+```bash
+#!/usr/bin/env bash
+# Searches open issues by labels. Prints matching issue numbers (one per line).
+# Usage: search.sh --labels "label1,label2"
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "${SCRIPT_DIR}/lib/common.sh"
+
+LABELS=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --labels) LABELS="$2"; shift 2 ;;
+        *) log_error "Unknown argument: $1"; exit 1 ;;
+    esac
+done
+
+[[ -z "${LABELS}" ]] && { log_error "Missing --labels"; exit 1; }
+
+check_prerequisites
+
+log_info "Searching for open issues with labels: ${LABELS}"
+
+RESULTS="$(gh issue list \
+    --repo "${REPO}" \
+    --label "${LABELS}" \
+    --state open \
+    --json number \
+    --jq '.[].number' \
+    2>/dev/null || true)"
+
+if [[ -z "${RESULTS}" ]]; then
+    log_info "No open issues found matching labels: ${LABELS}"
+    exit 0
+fi
+
+COUNT="$(echo "${RESULTS}" | wc -l | tr -d ' ')"
+log_info "Found ${COUNT} open issue(s) matching labels: ${LABELS}"
+echo "${RESULTS}"
+```
+
+##### `.github/scripts/issues/close.sh`
+
+```bash
+#!/usr/bin/env bash
+# Closes a GitHub issue with an optional comment.
+# Usage: close.sh --issue <number> [--comment "..."]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "${SCRIPT_DIR}/lib/common.sh"
+
+ISSUE_NUMBER="" COMMENT=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --issue)   ISSUE_NUMBER="$2"; shift 2 ;;
+        --comment) COMMENT="$2";      shift 2 ;;
+        *) log_error "Unknown argument: $1"; exit 1 ;;
+    esac
+done
+
+[[ -z "${ISSUE_NUMBER}" ]] && { log_error "Missing --issue"; exit 1; }
+[[ ! "${ISSUE_NUMBER}" =~ ^[0-9]+$ ]] && { log_error "Issue number must be integer"; exit 1; }
+
+check_prerequisites
+
+if [[ -n "${COMMENT}" ]]; then
+    log_info "Adding comment to issue #${ISSUE_NUMBER}..."
+    gh issue comment "${ISSUE_NUMBER}" --repo "${REPO}" --body "${COMMENT}"
+    log_success "Comment added to issue #${ISSUE_NUMBER}."
+fi
+
+log_info "Closing issue #${ISSUE_NUMBER}..."
+gh issue close "${ISSUE_NUMBER}" --repo "${REPO}" --reason "completed"
+log_success "Issue #${ISSUE_NUMBER} closed."
+```
+
+#### 5.3 CI Auto-Issue Scripts
+
+These scripts wrap the issue library for CI-specific use cases. They are called from the CI workflow
+(`ci-summary` job) on main-branch runs only.
+
+##### `.github/scripts/ci/on-failure.sh`
+
+```bash
+#!/usr/bin/env bash
+# Creates a GitHub issue when a CI job fails. Deduplicates (skips if open issue exists).
+# Usage: on-failure.sh <job-name> <run-url>
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ISSUES_DIR="${SCRIPT_DIR}/../issues"
+
+# shellcheck source=../issues/lib/common.sh
+source "${ISSUES_DIR}/lib/common.sh"
+
+[[ $# -lt 2 ]] && { log_error "Usage: on-failure.sh <job-name> <run-url>"; exit 1; }
+
+JOB_NAME="$1"
+RUN_URL="$2"
+
+COMMIT_SHA="${GITHUB_SHA:-unknown}"
+ACTOR="${GITHUB_ACTOR:-unknown}"
+BRANCH="${GITHUB_REF_NAME:-main}"
+
+log_info "CI failure detected for job: ${JOB_NAME}"
+
+TITLE="CI Failure: ${JOB_NAME} failed on ${BRANCH}"
+
+BODY="## CI Job Failure
+
+The **${JOB_NAME}** job failed on the **${BRANCH}** branch.
+
+### Details
+
+| Field | Value |
+|-------|-------|
+| **Job** | \`${JOB_NAME}\` |
+| **Branch** | \`${BRANCH}\` |
+| **Commit** | \`${COMMIT_SHA:0:8}\` |
+| **Triggered by** | @${ACTOR} |
+| **Run URL** | [View Logs](${RUN_URL}) |
+| **Timestamp** | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
+
+### Next Steps
+
+1. Check the [workflow run logs](${RUN_URL}) for details
+2. Fix the failing job
+3. This issue will be **automatically closed** when the job passes on \`${BRANCH}\`
+
+---
+*This issue was automatically created by the CI pipeline.*"
+
+LABELS="${LABEL_CI_FAILURE},${LABEL_AUTOMATED},job:${JOB_NAME}"
+
+# ── Deduplication: skip if an open issue already exists ───────────────
+EXISTING="$("${ISSUES_DIR}/search.sh" --labels "${LABELS}" 2>/dev/null || true)"
+
+if [[ -n "${EXISTING}" ]]; then
+    FIRST_ISSUE="$(echo "${EXISTING}" | head -n 1)"
+    log_warn "Open CI failure issue already exists for '${JOB_NAME}': #${FIRST_ISSUE}"
+    log_info "Skipping issue creation to avoid duplicates."
+    exit 0
+fi
+
+ISSUE_NUMBER="$("${ISSUES_DIR}/create.sh" \
+    --title "${TITLE}" \
+    --body "${BODY}" \
+    --labels "${LABELS}")"
+
+log_success "Created CI failure issue #${ISSUE_NUMBER} for job '${JOB_NAME}'."
+```
+
+##### `.github/scripts/ci/on-success.sh`
+
+```bash
+#!/usr/bin/env bash
+# Closes open CI failure issues when the job passes.
+# Usage: on-success.sh <job-name>
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ISSUES_DIR="${SCRIPT_DIR}/../issues"
+
+# shellcheck source=../issues/lib/common.sh
+source "${ISSUES_DIR}/lib/common.sh"
+
+[[ $# -lt 1 ]] && { log_error "Usage: on-success.sh <job-name>"; exit 1; }
+
+JOB_NAME="$1"
+
+COMMIT_SHA="${GITHUB_SHA:-unknown}"
+ACTOR="${GITHUB_ACTOR:-unknown}"
+SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
+REPOSITORY="${GITHUB_REPOSITORY:-OWNER/PROJECT}"
+RUN_ID="${GITHUB_RUN_ID:-}"
+
+log_info "CI success for job: ${JOB_NAME} - checking for open failure issues..."
+
+SEARCH_LABELS="${LABEL_CI_FAILURE},${LABEL_AUTOMATED},job:${JOB_NAME}"
+ISSUE_NUMBERS="$("${ISSUES_DIR}/search.sh" --labels "${SEARCH_LABELS}" 2>/dev/null || true)"
+
+if [[ -z "${ISSUE_NUMBERS}" ]]; then
+    log_info "No open CI failure issues found for job '${JOB_NAME}'. Nothing to close."
+    exit 0
+fi
+
+RUN_URL_PART=""
+if [[ -n "${RUN_ID}" ]]; then
+    RUN_URL_PART="
+| **Passing run** | [View Logs](${SERVER_URL}/${REPOSITORY}/actions/runs/${RUN_ID}) |"
+fi
+
+COMMENT="## Resolved
+
+The **${JOB_NAME}** job is now passing on the main branch.
+
+| Field | Value |
+|-------|-------|
+| **Job** | \`${JOB_NAME}\` |
+| **Fixed in commit** | \`${COMMIT_SHA:0:8}\` |
+| **Fixed by** | @${ACTOR} |${RUN_URL_PART}
+| **Resolved at** | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
+
+---
+*This issue was automatically closed by the CI pipeline.*"
+
+CLOSED_COUNT=0
+
+while IFS= read -r ISSUE_NUMBER; do
+    [[ -z "${ISSUE_NUMBER}" ]] && continue
+
+    log_info "Closing issue #${ISSUE_NUMBER}..."
+
+    "${ISSUES_DIR}/close.sh" \
+        --issue "${ISSUE_NUMBER}" \
+        --comment "${COMMENT}" || {
+            log_error "Failed to close issue #${ISSUE_NUMBER}. Continuing..."
+            continue
+        }
+
+    CLOSED_COUNT=$((CLOSED_COUNT + 1))
+done <<< "${ISSUE_NUMBERS}"
+
+if [[ ${CLOSED_COUNT} -gt 0 ]]; then
+    log_success "Closed ${CLOSED_COUNT} CI failure issue(s) for job '${JOB_NAME}'."
+else
+    log_warn "No issues were closed (all close attempts may have failed)."
+fi
+```
+
+#### 5.4 CI Workflow
+
+The workflow runs 3 parallel lint jobs + a `ci-summary` job that handles auto-issue management.
 
 **Security:** All GitHub context values in `run:` blocks MUST use `env:` variables, never direct
 `${{ }}` interpolation. Only safe values (ref, server_url, repository, run_id, needs.\*.result) are
 used.
 
-**common.sh** defines: `REPO="owner/project"`, label constants, logging functions (`log_info`,
-`log_error`, `log_success`, `log_warn`), and `check_prerequisites` (gh CLI + auth).
+##### `.github/workflows/ci.yml`
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  # ── Lint Markdown ─────────────────────────────────────────────────────
+  lint-markdown:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v22
+        with:
+          globs: '**/*.md'
+          fix: false
+
+  # ── Lint Shell Scripts ────────────────────────────────────────────────
+  lint-shell:
+    name: Shell Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: '.github/scripts'
+          severity: warning
+
+  # ── Format Check ──────────────────────────────────────────────────────
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npx prettier --check '**/*.{md,json,yml,yaml}'
+
+  # ── CI Summary + Auto-Issue Management ────────────────────────────────
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint-markdown, lint-shell, format-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Make scripts executable
+        run:
+          chmod +x .github/scripts/ci/*.sh .github/scripts/issues/*.sh
+          .github/scripts/issues/lib/*.sh
+
+      - name: Determine overall result
+        id: result
+        env:
+          LINT_MD_RESULT: ${{ needs.lint-markdown.result }}
+          LINT_SHELL_RESULT: ${{ needs.lint-shell.result }}
+          FORMAT_RESULT: ${{ needs.format-check.result }}
+        run: |
+          echo "lint-markdown=${LINT_MD_RESULT}" >> "$GITHUB_OUTPUT"
+          echo "lint-shell=${LINT_SHELL_RESULT}" >> "$GITHUB_OUTPUT"
+          echo "format-check=${FORMAT_RESULT}" >> "$GITHUB_OUTPUT"
+
+          if [[ "${LINT_MD_RESULT}" == "success" && \
+                "${LINT_SHELL_RESULT}" == "success" && \
+                "${FORMAT_RESULT}" == "success" ]]; then
+            echo "overall=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "overall=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Print summary
+        env:
+          LINT_MD_RESULT: ${{ needs.lint-markdown.result }}
+          LINT_SHELL_RESULT: ${{ needs.lint-shell.result }}
+          FORMAT_RESULT: ${{ needs.format-check.result }}
+          OVERALL_RESULT: ${{ steps.result.outputs.overall }}
+        run: |
+          echo "## CI Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Job | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Markdown Lint | \`${LINT_MD_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Shell Lint | \`${LINT_SHELL_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Format Check | \`${FORMAT_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "${OVERALL_RESULT}" == "success" ]]; then
+            echo "**Overall: All checks passed.**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "**Overall: One or more checks failed.**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # ── Failure handling (main branch only) ───────────────────────────
+      - name: Handle lint-markdown failure
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.lint-markdown.result == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: .github/scripts/ci/on-failure.sh "lint-markdown" "${RUN_URL}"
+
+      - name: Handle lint-shell failure
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.lint-shell.result == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: .github/scripts/ci/on-failure.sh "lint-shell" "${RUN_URL}"
+
+      - name: Handle format-check failure
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.format-check.result == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: .github/scripts/ci/on-failure.sh "format-check" "${RUN_URL}"
+
+      # ── Success handling (main branch only) ───────────────────────────
+      - name: Handle lint-markdown success
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.lint-markdown.result == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/ci/on-success.sh "lint-markdown"
+
+      - name: Handle lint-shell success
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.lint-shell.result == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/ci/on-success.sh "lint-shell"
+
+      - name: Handle format-check success
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.format-check.result == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/ci/on-success.sh "format-check"
+
+      # ── Final gate ────────────────────────────────────────────────────
+      - name: Fail if any job failed
+        if: always() && steps.result.outputs.overall == 'failure'
+        run: |
+          echo "::error::CI failed. See individual job results above."
+          exit 1
+```
+
+**Key design decisions:**
+
+- `concurrency` cancels in-progress runs on the same branch (saves CI minutes on rapid pushes)
+- `permissions` requests only `contents: read` + `issues: write` (least privilege)
+- `ci-summary` runs `if: always()` so it executes even when lint jobs fail
+- Each failure/success handler has its own step with an `if:` condition — this way a failure in one
+  handler doesn't block others
+- `RUN_URL` is built from safe GitHub context values (`server_url`, `repository`, `run_id`)
+
+**Shell lint:** Must use `severity: warning` to skip SC1091 (note-level, flagged on dynamic `source`
+paths that shellcheck can't resolve statically).
+
+#### 5.5 Adapting to Your Project
+
+To add/remove CI jobs, follow this pattern:
+
+1. Add the job to the `jobs:` section (parallel with others)
+2. Add it to `ci-summary.needs: [...]`
+3. Add env var + output in `Determine overall result` step
+4. Add the env var to the `if` condition in `Determine overall result`
+5. Add a row in `Print summary`
+6. Add a `Handle X failure` step and a `Handle X success` step
+7. Add a `job:your-job-name` label to `labels.json`
+
+#### 5.6 Dependabot
+
+Dependabot automates dependency update PRs. Configure it in `.github/dependabot.yml`.
+
+##### `.github/dependabot.yml`
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'chore(deps)'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'ci(deps)'
+```
+
+**Critical notes about dependabot `labels`:**
+
+| Behavior                     | Detail                                                                                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Custom `labels` replaces ALL | Setting `labels: ['dependencies']` removes the default `dependencies` label, then re-adds your list. Use `labels: []` to disable ALL labels. |
+| Labels MUST pre-exist        | If a label in the list doesn't exist in the repo, dependabot silently ignores it. The PR is created but without that label.                  |
+| No auto-creation             | Unlike `gh issue create --label`, dependabot never creates missing labels.                                                                   |
+| SemVer labels are separate   | Dependabot adds `major`/`minor`/`patch` labels automatically based on the version bump — these are unaffected by the `labels` option.        |
+
+**`commit-message.prefix`** adds a conventional commit prefix to PR titles. Use `chore(deps)` for
+runtime/dev dependencies and `ci(deps)` for GitHub Actions updates. This ensures dependabot PRs
+follow the same commit convention as the rest of the project.
+
+**Optional: Grouping updates** into a single PR per ecosystem:
+
+```yaml
+- package-ecosystem: 'npm'
+  directory: '/'
+  schedule:
+    interval: 'weekly'
+  labels:
+    - 'dependencies'
+  commit-message:
+    prefix: 'chore(deps)'
+  groups:
+    all-npm:
+      patterns:
+        - '*'
+```
 
 ### Step 6: Makefile Convention
 
@@ -448,3 +1118,5 @@ docs/plans/
 | Personal paths in examples             | Use generic paths (`~/Projects/...`) not real usernames               |
 | Squash doesn't purge history           | Squash only rewrites HEAD chain; old refs survive in reflog/remotes   |
 | `.gitkeep` for empty directories       | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks    |
+| Dependabot PRs have no labels          | Labels must pre-exist in the repo; sync `labels.json` first           |
+| CI auto-close doesn't find issues      | Missing `job:*` labels; run labels sync workflow before first CI run  |
