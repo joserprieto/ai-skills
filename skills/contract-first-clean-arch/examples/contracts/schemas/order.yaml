@@ -2,14 +2,13 @@
 # The order is the transactional boundary: either all tickets in an
 # order are paid for, or the entire order is cancelled/refunded.
 
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: 'https://json-schema.org/draft/2020-12/schema'
 $id: order
 
 type: object
 properties:
-
   id:
-    $ref: "common.yaml#/$defs/UUID"
+    $ref: 'common.yaml#/$defs/UUID'
 
   # An order must contain at least one ticket. The upper bound is
   # intentionally left open — business rules (e.g. max 6 per buyer)
@@ -17,23 +16,23 @@ properties:
   ticketIds:
     type: array
     items:
-      $ref: "common.yaml#/$defs/UUID"
+      $ref: 'common.yaml#/$defs/UUID'
     minItems: 1
-    description: "IDs of the tickets included in this order."
+    description: 'IDs of the tickets included in this order.'
 
   buyerEmail:
     type: string
     format: email
-    description: "Contact email for confirmations and e-tickets."
+    description: 'Contact email for confirmations and e-tickets.'
 
   buyerName:
     type: string
     minLength: 1
-    description: "Full name as it will appear on the ticket."
+    description: 'Full name as it will appear on the ticket.'
 
   totalAmount:
-    $ref: "common.yaml#/$defs/Money"
-    description: "Sum of all ticket prices; computed server-side."
+    $ref: 'common.yaml#/$defs/Money'
+    description: 'Sum of all ticket prices; computed server-side.'
 
   # Order lifecycle:
   #   pending   → tickets reserved, awaiting payment
@@ -43,14 +42,14 @@ properties:
   #   refunded  → post-payment reversal
   status:
     type: string
-    enum: [ pending, confirmed, paid, cancelled, refunded ]
+    enum: [pending, confirmed, paid, cancelled, refunded]
 
   # Set by the payment gateway after a successful charge.
   paymentId:
     type: string
-    description: "External payment reference; null until payment succeeds."
+    description: 'External payment reference; null until payment succeeds.'
 
   createdAt:
-    $ref: "common.yaml#/$defs/DateTime"
+    $ref: 'common.yaml#/$defs/DateTime'
 
-required: [ id, ticketIds, buyerEmail, buyerName, totalAmount, status, createdAt ]
+required: [id, ticketIds, buyerEmail, buyerName, totalAmount, status, createdAt]

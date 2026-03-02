@@ -1,13 +1,14 @@
 # Event Ticketing Platform — Contract SSOT
 
-This directory is the **Single Source of Truth (SSOT)** for the Event Ticketing Platform domain. Every type, endpoint,
-and domain event is defined here first; implementation code is then generated from these contracts.
+This directory is the **Single Source of Truth (SSOT)** for the Event Ticketing Platform domain.
+Every type, endpoint, and domain event is defined here first; implementation code is then generated
+from these contracts.
 
 ## Why contracts first?
 
-When contracts live in code, the schema and the implementation inevitably drift apart. By treating YAML schemas as the
-authoritative source, we guarantee that server stubs, client SDKs, and documentation always agree on the shape of the
-data.
+When contracts live in code, the schema and the implementation inevitably drift apart. By treating
+YAML schemas as the authoritative source, we guarantee that server stubs, client SDKs, and
+documentation always agree on the shape of the data.
 
 ## Directory structure
 
@@ -33,8 +34,8 @@ Schemas reference each other through **relative `$ref` paths**:
 - `openapi.yaml` references `../schemas/event.yaml` for response bodies.
 - `asyncapi.yaml` references `../schemas/common.yaml#/$defs/Money` for the payment amount.
 
-This means a change to a shared type (e.g. adding a currency to the `Currency` enum) propagates automatically to every
-schema and spec that uses it.
+This means a change to a shared type (e.g. adding a currency to the `Currency` enum) propagates
+automatically to every schema and spec that uses it.
 
 ## Generation flow
 
@@ -49,8 +50,8 @@ specs/*.yaml ────┘        (e.g. openapi-generator, asyncapi-generator)
 3. **Review** the generated types in `contracts/generated/` (or equivalent).
 4. **Implement** business logic against the generated interfaces.
 
-Generated code should be committed to the repository so that consumers who do not run the generator locally still have
-up-to-date types.
+Generated code should be committed to the repository so that consumers who do not run the generator
+locally still have up-to-date types.
 
 ## Drift detection in CI
 
@@ -64,8 +65,8 @@ Add a CI step that regenerates the code and checks for uncommitted differences:
     git diff --exit-code contracts/generated/
 ```
 
-If the diff is non-empty, the build fails — proving that someone changed the implementation without updating the
-contract (or vice versa).
+If the diff is non-empty, the build fails — proving that someone changed the implementation without
+updating the contract (or vice versa).
 
 ## Adding a new entity
 

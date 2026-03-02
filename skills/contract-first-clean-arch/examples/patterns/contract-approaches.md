@@ -1,7 +1,7 @@
 # Contract approaches: detailed guidance
 
-This document explains when and how to use each contract strategy, independent of
-language or framework.
+This document explains when and how to use each contract strategy, independent of language or
+framework.
 
 ## Decision matrix
 
@@ -58,9 +58,9 @@ pagination, headers.
 **Tools by ecosystem**:
 
 | Ecosystem   | Generator                                          | Output                               |
-|-------------|----------------------------------------------------|--------------------------------------|
+| ----------- | -------------------------------------------------- | ------------------------------------ |
 | TypeScript  | `openapi-typescript`, `orval`, `openapi-generator` | Types, Axios/fetch clients           |
-| Python      | `datamodel-codegen`, `openapi-generator`            | Pydantic models, client classes      |
+| Python      | `datamodel-codegen`, `openapi-generator`           | Pydantic models, client classes      |
 | Java/Kotlin | `openapi-generator`                                | POJOs/data classes, Retrofit clients |
 | Go          | `oapi-codegen`, `openapi-generator`                | Structs, Chi/Gin handlers            |
 | C#          | `NSwag`, `openapi-generator`                       | Types, HttpClient clients            |
@@ -77,8 +77,8 @@ git diff --exit-code generated/
 
 **Schema source**: `asyncapi.yaml` (version 3.0)
 
-**What it defines**: Channels, message schemas, event payloads, protocol bindings
-(AMQP, NATS, Kafka, WebSocket, MQTT).
+**What it defines**: Channels, message schemas, event payloads, protocol bindings (AMQP, NATS,
+Kafka, WebSocket, MQTT).
 
 **Generates**:
 
@@ -87,26 +87,26 @@ git diff --exit-code generated/
 - Channel documentation
 - Message validators
 
-**When to use**: Any project with event-driven communication — message queues, pub/sub,
-WebSocket events, server-sent events.
+**When to use**: Any project with event-driven communication — message queues, pub/sub, WebSocket
+events, server-sent events.
 
 **Tools by ecosystem**:
 
 | Ecosystem  | Generator                            | Output                              |
-|------------|--------------------------------------|-------------------------------------|
+| ---------- | ------------------------------------ | ----------------------------------- |
 | TypeScript | `@asyncapi/generator` with templates | Types, NATS/Kafka clients           |
 | Python     | `@asyncapi/generator`, custom        | Pydantic event models               |
 | Java       | `@asyncapi/generator`                | POJOs, Spring Cloud Stream bindings |
 
-**Combines with**: OpenAPI for REST + AsyncAPI for events in the same project.
-Both specs can reference shared schemas via `$ref` to a common `schemas/` directory.
+**Combines with**: OpenAPI for REST + AsyncAPI for events in the same project. Both specs can
+reference shared schemas via `$ref` to a common `schemas/` directory.
 
 ## Approach 3: JSON Schema (language-agnostic types)
 
 **Schema source**: `.json` or `.yaml` files following JSON Schema draft 2020-12
 
-**What it defines**: Data structures, validation rules, type constraints.
-Does NOT define endpoints, channels, or protocols.
+**What it defines**: Data structures, validation rules, type constraints. Does NOT define endpoints,
+channels, or protocols.
 
 **Generates**:
 
@@ -114,22 +114,21 @@ Does NOT define endpoints, channels, or protocols.
 - Validators in ANY language
 - Form schemas for UI generation
 
-**When to use**: When you need shared types across multiple languages or services
-without coupling to a specific API protocol.
+**When to use**: When you need shared types across multiple languages or services without coupling
+to a specific API protocol.
 
 **Tools by ecosystem**:
 
-| Ecosystem  | Generator                        | Output                         |
-|------------|----------------------------------|--------------------------------|
+| Ecosystem  | Generator                                | Output                         |
+| ---------- | ---------------------------------------- | ------------------------------ |
 | TypeScript | `json-schema-to-typescript`, `quicktype` | Interfaces, type guards        |
 | Python     | `datamodel-codegen`                      | Pydantic models, dataclasses   |
-| Java       | `jsonschema2pojo`                | POJOs with Jackson annotations |
-| Go         | `go-jsonschema`                  | Structs with json tags         |
-| C#         | `NJsonSchema`                    | Types with DataAnnotations     |
+| Java       | `jsonschema2pojo`                        | POJOs with Jackson annotations |
+| Go         | `go-jsonschema`                          | Structs with json tags         |
+| C#         | `NJsonSchema`                            | Types with DataAnnotations     |
 
-**Key advantage**: OpenAPI and AsyncAPI both use JSON Schema internally. Standalone
-JSON Schema files can be `$ref`'d from both specs, creating a unified type system
-across REST and event APIs.
+**Key advantage**: OpenAPI and AsyncAPI both use JSON Schema internally. Standalone JSON Schema
+files can be `$ref`'d from both specs, creating a unified type system across REST and event APIs.
 
 ## Approach 4: Protocol Buffers (gRPC / high-performance RPC)
 
@@ -143,11 +142,11 @@ across REST and event APIs.
 - Serialization/deserialization code
 - gRPC service definitions
 
-**When to use**: High-performance inter-service communication, streaming,
-strongly-typed RPC across language boundaries.
+**When to use**: High-performance inter-service communication, streaming, strongly-typed RPC across
+language boundaries.
 
-**Built-in generation**: `protoc` compiler with language-specific plugins.
-No custom pipeline needed — the toolchain is standardized.
+**Built-in generation**: `protoc` compiler with language-specific plugins. No custom pipeline needed
+— the toolchain is standardized.
 
 ## Approach 5: GraphQL SDL (GraphQL APIs)
 
@@ -161,26 +160,26 @@ No custom pipeline needed — the toolchain is standardized.
 - Typed query hooks/clients (frontend)
 - Type definitions in any language
 
-**Tools**: `graphql-codegen` (TypeScript), `ariadne-codegen` (Python),
-`graphql-java-codegen` (Java).
+**Tools**: `graphql-codegen` (TypeScript), `ariadne-codegen` (Python), `graphql-java-codegen`
+(Java).
 
 ## Combining approaches
 
 Most mature projects combine multiple approaches:
 
 | Pattern          | REST API    | Events          | Shared types                 |
-|------------------|-------------|-----------------|------------------------------|
+| ---------------- | ----------- | --------------- | ---------------------------- |
 | Common           | OpenAPI     | AsyncAPI        | JSON Schema `$ref`'d by both |
 | gRPC-native      | —           | Protobuf events | `.proto` definitions         |
 | GraphQL + events | GraphQL SDL | AsyncAPI        | Shared type definitions      |
 
-**Key rule**: All specs must reference the SAME schema definitions. Never duplicate
-type definitions across specs — use `$ref` or imports to a shared `schemas/` directory.
+**Key rule**: All specs must reference the SAME schema definitions. Never duplicate type definitions
+across specs — use `$ref` or imports to a shared `schemas/` directory.
 
 ## Anti-patterns
 
 | Anti-pattern                                          | Why it fails                                      | Correct approach                    |
-|-------------------------------------------------------|---------------------------------------------------|-------------------------------------|
+| ----------------------------------------------------- | ------------------------------------------------- | ----------------------------------- |
 | Writing types by hand in each language                | N languages × M types = N×M things to sync        | Generate from single schema         |
 | Separate OpenAPI and AsyncAPI with duplicated schemas | Schemas will diverge between REST and event types | Shared `schemas/` dir with `$ref`   |
 | Using Zod/Pydantic as SSOT in polyglot projects       | Locks the schema to one language                  | Use JSON Schema or Protobuf as SSOT |

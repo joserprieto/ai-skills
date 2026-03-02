@@ -2,14 +2,13 @@
 # take place. Venues are referenced by events and provide the
 # structural data (sections, rows, seats) used to generate tickets.
 
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: 'https://json-schema.org/draft/2020-12/schema'
 $id: venue
 
 type: object
 properties:
-
   id:
-    $ref: "common.yaml#/$defs/UUID"
+    $ref: 'common.yaml#/$defs/UUID'
 
   name:
     type: string
@@ -18,12 +17,12 @@ properties:
 
   address:
     type: string
-    description: "Full postal address for navigation and legal purposes."
+    description: 'Full postal address for navigation and legal purposes.'
 
   totalCapacity:
     type: integer
     minimum: 1
-    description: "Maximum attendees when all sections are open."
+    description: 'Maximum attendees when all sections are open.'
 
   # Sections define the physical layout. For a simple flat-floor
   # venue a single section is enough; large theaters may have many.
@@ -38,12 +37,12 @@ properties:
         rows:
           type: integer
           minimum: 1
-          description: "Number of rows in this section."
+          description: 'Number of rows in this section.'
         seatsPerRow:
           type: integer
           minimum: 1
-          description: "Seats in each row (assumes uniform rows)."
-      required: [ name, rows, seatsPerRow ]
-    description: "Optional breakdown of the venue into named sections."
+          description: 'Seats in each row (assumes uniform rows).'
+      required: [name, rows, seatsPerRow]
+    description: 'Optional breakdown of the venue into named sections.'
 
-required: [ id, name, address, totalCapacity ]
+required: [id, name, address, totalCapacity]

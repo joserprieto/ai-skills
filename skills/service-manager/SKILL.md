@@ -1,10 +1,10 @@
 ---
 name: service-manager
 description: >-
-  Use when adding background service management to a project that runs dev servers,
-  preview servers, or any long-running processes. Also use when user says "service manager",
-  "background server", "start/stop services", "PID management", "log rotation", or needs
-  Makefile targets for start/stop/status/tail/logs.
+  Use when adding background service management to a project that runs dev servers, preview servers,
+  or any long-running processes. Also use when user says "service manager", "background server",
+  "start/stop services", "PID management", "log rotation", or needs Makefile targets for
+  start/stop/status/tail/logs.
 license: MIT
 metadata:
   author: Jose R. Prieto <hi at joserprieto dot es>
@@ -14,9 +14,9 @@ metadata:
 
 # Service Manager Pattern
 
-Add background service management to any project with PID tracking, health checks, log
-rotation, and Makefile integration. Replaces foreground-only `make dev` patterns with
-a full start/stop/status/tail DX.
+Add background service management to any project with PID tracking, health checks, log rotation, and
+Makefile integration. Replaces foreground-only `make dev` patterns with a full
+start/stop/status/tail DX.
 
 ## When to Use
 
@@ -49,16 +49,16 @@ project/
 
 ## Quick Reference
 
-| Command | Effect |
-|---------|--------|
-| `make start` | Start default service(s) in background |
-| `make start/<svc>/fg` | Start in foreground (Ctrl+C to stop) |
-| `make stop` | Stop all services (graceful SIGTERM → SIGKILL) |
-| `make status` | Show running/stopped with health check |
-| `make status/details` | Add PID, uptime, log size, paths |
-| `make tail` | `tail -f` all running service logs |
-| `make logs` | List log files with sizes |
-| `make logs/rotate` | Rotate log files |
+| Command               | Effect                                         |
+| --------------------- | ---------------------------------------------- |
+| `make start`          | Start default service(s) in background         |
+| `make start/<svc>/fg` | Start in foreground (Ctrl+C to stop)           |
+| `make stop`           | Stop all services (graceful SIGTERM → SIGKILL) |
+| `make status`         | Show running/stopped with health check         |
+| `make status/details` | Add PID, uptime, log size, paths               |
+| `make tail`           | `tail -f` all running service logs             |
+| `make logs`           | List log files with sizes                      |
+| `make logs/rotate`    | Rotate log files                               |
 
 ## Implementation Steps
 
@@ -110,18 +110,18 @@ export VAR1 VAR2 PORT1 PORT2
 VAR1 ?= default_value
 
 start: _ensure
-	@$(SM) start <service>
+  @$(SM) start <service>
 
 stop:
-	@$(SM) stop --all
+  @$(SM) stop --all
 
 status:
-	@$(SM) status
+  @$(SM) status
 
 _ensure: node_modules
 node_modules: package.json
-	@pnpm install
-	@touch node_modules
+  @pnpm install
+  @touch node_modules
 ```
 
 ### Step 5: Update `.gitignore`
@@ -146,20 +146,20 @@ Kept from example (do not remove):
 
 ## Common Adaptations
 
-| Scenario | Change |
-|----------|--------|
+| Scenario                 | Change                                                     |
+| ------------------------ | ---------------------------------------------------------- |
 | Monorepo (multiple apps) | Add `APPS_DIR`, use `join(APPS_DIR, 'app-name')` for `cwd` |
-| Extra env per service | Add `env?: Record<string, string>` to ServiceConfig |
-| Build-then-serve | Use `pnpm run preview` script that chains build + serve |
-| Conditional flags | Build command array dynamically based on env vars |
-| Custom health check | Override `healthUrl` or extend `checkHealth()` |
+| Extra env per service    | Add `env?: Record<string, string>` to ServiceConfig        |
+| Build-then-serve         | Use `pnpm run preview` script that chains build + serve    |
+| Conditional flags        | Build command array dynamically based on env vars          |
+| Custom health check      | Override `healthUrl` or extend `checkHealth()`             |
 
 ## Common Mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| Using `.env` instead of `.env.local` | Frameworks read `.env` — use `.env.local` to avoid conflicts |
-| Not exporting env vars in Makefile | Add `export VAR1 VAR2` for service manager to see them |
-| Missing `_ensure` prerequisite | All service targets need `_ensure` (which depends on `node_modules`) |
-| Forgetting `.gitignore` entries | `.state/`, `.logs/`, `.env.local` must be git-ignored |
-| Using `&&` in spawn command array | Shell operators don't work in spawn — create a npm script instead |
+| Mistake                              | Fix                                                                  |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| Using `.env` instead of `.env.local` | Frameworks read `.env` — use `.env.local` to avoid conflicts         |
+| Not exporting env vars in Makefile   | Add `export VAR1 VAR2` for service manager to see them               |
+| Missing `_ensure` prerequisite       | All service targets need `_ensure` (which depends on `node_modules`) |
+| Forgetting `.gitignore` entries      | `.state/`, `.logs/`, `.env.local` must be git-ignored                |
+| Using `&&` in spawn command array    | Shell operators don't work in spawn — create a npm script instead    |
