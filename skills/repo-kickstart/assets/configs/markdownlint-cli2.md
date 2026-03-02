@@ -1,7 +1,9 @@
+#### .markdownlint-cli2.jsonc
+
+```jsonc
 {
   "config": {
     "default": true,
-    "MD010": { "code_blocks": false },
     "MD013": false,
     "MD024": { "siblings_only": true },
     "MD033": false,
@@ -11,3 +13,4 @@
   },
   "ignores": ["node_modules/**", "CHANGELOG.md", ".venv/**"],
 }
+```

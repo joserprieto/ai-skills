@@ -66,8 +66,8 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 ### Examples
 
 ```text
-feat(skills): add enterprise-repo-setup skill
-fix(skills): correct shellcheck severity flag in enterprise-repo-setup
+feat(skills): add repo-kickstart skill
+fix(skills): correct shellcheck severity flag in repo-kickstart
 docs(readme): update installation steps
 ci(workflow): add shell linting job
 ```

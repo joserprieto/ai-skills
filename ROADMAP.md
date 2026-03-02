@@ -20,7 +20,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history.
 
 ## Available Skills
 
-- **enterprise-repo-setup** — Professional OSS repository setup with CI/CD, linting, releases, and
+- **repo-kickstart** — Professional OSS repository setup with CI/CD, linting, releases, and
   documentation
 
 ## Planned Skills

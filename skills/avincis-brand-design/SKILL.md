@@ -7,9 +7,8 @@ description: >-
   presentation", or "brand guidelines".
 license: MIT
 metadata:
-  author: Jose R. Prieto <hi at joserprieto dot es>
+  author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.1.0'
-  status: APPROVED
 ---
 
 # Avincis Brand Design
@@ -207,34 +206,49 @@ Five corporate colors with full scales. Use the EXACT hex values below.
 
 ### Step 4: Draw.io / Diagrams Convention
 
-Standardized color mapping for all diagram elements. Apply these tokens to every draw.io, PlantUML,
-Mermaid, or SVG diagram.
+For UML diagram shapes and style strings, use the `drawio-uml-shapes` skill. Apply the Avincis color
+overrides below to its semantic roles. These tokens apply to every draw.io, PlantUML, Mermaid, or SVG
+diagram.
 
-**Element color mapping:**
+**Avincis semantic role overrides** (maps `drawio-uml-shapes` roles to Avincis tokens):
 
-| Element               | Fill                  | Stroke                 | Font Color            | Example            |
-| --------------------- | --------------------- | ---------------------- | --------------------- | ------------------ |
-| Host EOL / Stack EOL  | `red.50` (#FFF1EE)    | `red.400` (#EB4529)    | `red.400` (#EB4529)   | Ubuntu 16.04 nodes |
-| Host supported        | `blue.100` (#E5E7F1)  | `blue.800` (#242846)   | `blue.800` (#242846)  | Debian 12 nodes    |
-| App services          | `yellow.50` (#FCF9F3) | `yellow.400` (#FFC100) | `blue.800` (#242846)  | Java apps, Node.js |
-| Infrastructure        | `green.50` (#F0FAF1)  | `green.500` (#009638)  | `blue.800` (#242846)  | NFS, Nagios        |
-| Algorithms            | `sky.100` (#E1EDF8)   | `sky.500` (#5D90C2)    | `blue.800` (#242846)  | Processing nodes   |
-| Deprecated            | `slate.200` (#E2E8F0) | `slate.400` (#94A3B8)  | `slate.400` (#94A3B8) | Unused services    |
-| Boundary (provider)   | `blue.50` (#F4F5F9)   | `blue.800` (#242846)   | `blue.800` (#242846)  | Cloud providers    |
-| Boundary (hypervisor) | `slate.50` (#F8FAFC)  | `slate.500` (#64748B)  | `slate.500` (#64748B) | vSphere, Proxmox   |
-| Boundary (network)    | `green.50` (#F0FAF1)  | `green.500` (#009638)  | `green.500` (#009638) | VDC, VLAN          |
-| Boundary (external)   | `yellow.50` (#FCF9F3) | `yellow.400` (#FFC100) | `blue.800` (#242846)  | CESGA, third party |
+| Semantic Role        | Avincis Token           | Fill        | Stroke      | Font Color  |
+| -------------------- | ----------------------- | ----------- | ----------- | ----------- |
+| `surface-device`     | blue.100 / blue.800     | `#E5E7F1`  | `#242846`   | `#242846`   |
+| `surface-default`    | white / blue.800        | `#FFFFFF`   | `#242846`   | `#242846`   |
+| `surface-muted`      | blue.50 / blue.200      | `#F4F5F9`  | `#C8CCE2`   | `#242846`   |
+| `text-primary`       | blue.800                | —           | —           | `#242846`   |
+| `text-secondary`     | slate.500               | —           | —           | `#64748B`   |
+| `category-appserver` | yellow.50 / yellow.400  | `#FCF9F3`  | `#FFC100`   | `#242846`   |
+| `category-database`  | sky.100 / sky.500       | `#E1EDF8`  | `#5D90C2`   | `#242846`   |
+| `category-broker`    | sky.100 / sky.400       | `#E1EDF8`  | `#90BAE4`   | `#242846`   |
+| `category-proxy`     | green.50 / green.500    | `#F0FAF1`  | `#009638`   | `#242846`   |
+| `category-container` | yellow.50 / yellow.400  | `#FCF9F3`  | `#FFC100`   | `#242846`   |
+| `category-infra`     | green.50 / green.500    | `#F0FAF1`  | `#009638`   | `#242846`   |
+| `semantic-critical`  | red.50 / red.400        | `#FFF1EE`  | `#EB4529`   | `#EB4529`   |
+| `semantic-warning`   | yellow.100 / yellow.400 | `#FFF3D6`  | `#FFC100`   | `#242846`   |
+| `semantic-success`   | green.50 / green.500    | `#F0FAF1`  | `#009638`   | `#242846`   |
+| `semantic-info`      | sky.100 / sky.500       | `#E1EDF8`  | `#5D90C2`   | `#242846`   |
+| `special-deployspec` | yellow.100 / yellow.400 | `#FFF3D6`  | `#FFC100`   | `#242846`   |
+| `special-schema`     | sky.100 / sky.500       | `#E1EDF8`  | `#5D90C2`   | `#242846`   |
 
-**UML shape conventions:**
+**Avincis-specific element categories** (beyond standard semantic roles):
 
-| UML Element           | draw.io Shape                        | Key Style Props                              |
-| --------------------- | ------------------------------------ | -------------------------------------------- |
-| Device (physical/VM)  | `shape=cube;direction=south;size=10` | Container, **always** `strokeColor=blue.800` |
-| Execution Environment | `shape=cube;direction=south;size=10` | Nested inside device, smaller                |
-| Component/Artifact    | `shape=mxgraph.uml25.component`      | Inside device or exec env                    |
-| App (simple)          | `rounded=1`                          | Rounded rectangle inside container           |
+| Element    | Fill                  | Stroke                 | Font Color            | Example          |
+| ---------- | --------------------- | ---------------------- | --------------------- | ---------------- |
+| Algorithms | `sky.100` (#E1EDF8)   | `sky.500` (#5D90C2)    | `blue.800` (#242846)  | Processing nodes |
+| Deprecated | `slate.200` (#E2E8F0) | `slate.400` (#94A3B8)  | `slate.400` (#94A3B8) | Unused services  |
 
-**Edge conventions:**
+**Avincis boundary conventions** (infrastructure groups — not UML, Avincis-specific):
+
+| Boundary   | Fill                  | Stroke                 | Font Color            | Example          |
+| ---------- | --------------------- | ---------------------- | --------------------- | ---------------- |
+| Provider   | `blue.50` (#F4F5F9)   | `blue.800` (#242846)   | `blue.800` (#242846)  | Cloud providers  |
+| Hypervisor | `slate.50` (#F8FAFC)  | `slate.500` (#64748B)  | `slate.500` (#64748B) | vSphere, Proxmox |
+| Network    | `green.50` (#F0FAF1)  | `green.500` (#009638)  | `green.500` (#009638) | VDC, VLAN        |
+| External   | `yellow.50` (#FCF9F3) | `yellow.400` (#FFC100) | `blue.800` (#242846)  | CESGA, 3rd party |
+
+**Edge conventions** (Avincis-specific edge semantics):
 
 | Edge Type      | Style                      | strokeColor           | Width |
 | -------------- | -------------------------- | --------------------- | ----- |
@@ -243,12 +257,13 @@ Mermaid, or SVG diagram.
 | Technical debt | `dashed=1;dashPattern=4 2` | `red.400` (#EB4529)   | 2     |
 | Deprecated     | `dashed=1;dashPattern=4 4` | `slate.400` (#94A3B8) | 1     |
 
-**Global font:** `fontFamily=TrebuchetMS` (no space) on ALL elements. Draw.io requires the font name
-without space. Labels use `fontColor=#242846` (blue.800) unless a semantic color applies.
+**Global font override:** `fontFamily=Trebuchet MS` on ALL diagram elements. This overrides the
+`Sans-serif` default in `drawio-uml-shapes`. Labels use `fontColor=#242846` (blue.800) unless a
+semantic color applies.
 
 **Device stroke rule:** ALL deployment targets (device nodes) use `strokeColor=#242846` (blue.800)
 regardless of EOL status. The fill color communicates status (red.50 for EOL, blue.100 for
-supported). This gives the diagram a cohesive Avincis identity.
+supported). This gives diagrams a cohesive Avincis identity.
 
 ### Step 5: Logo Usage
 

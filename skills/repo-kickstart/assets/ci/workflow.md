@@ -1,17 +1,14 @@
-# ====================================================================================
-# CI Workflow - AI Skills
-# ====================================================================================
-#
-# Runs linting checks on every push to main and on pull requests.
-# On main-branch failures, automatically creates GitHub issues.
-# On main-branch success, automatically closes any open CI failure issues.
-#
-# Security note: No user-controllable inputs are interpolated into run: commands.
-# All GitHub context values used are safe (github.ref, github.server_url,
-# github.repository, github.run_id, needs.*.result).
-#
-# ====================================================================================
+#### 5.4 CI Workflow
 
+The workflow runs 3 parallel lint jobs + a `ci-summary` job that handles auto-issue management.
+
+**Security:** All GitHub context values in `run:` blocks MUST use `env:` variables, never direct
+`${{ }}` interpolation. Only safe values (ref, server_url, repository, run_id, needs.\*.result) are
+used.
+
+##### `.github/workflows/ci.yml`
+
+```yaml
 name: CI
 
 on:
@@ -29,9 +26,7 @@ permissions:
   issues: write
 
 jobs:
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # Lint Markdown
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # ── Lint Markdown ─────────────────────────────────────────────────────
   lint-markdown:
     name: Markdown Lint
     runs-on: ubuntu-latest
@@ -45,9 +40,7 @@ jobs:
           globs: '**/*.md'
           fix: false
 
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # Lint Shell Scripts
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # ── Lint Shell Scripts ────────────────────────────────────────────────
   lint-shell:
     name: Shell Lint
     runs-on: ubuntu-latest
@@ -61,24 +54,7 @@ jobs:
           scandir: '.github/scripts'
           severity: warning
 
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # Validate Skills
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  validate-skills:
-    name: Skills Validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Validate skills against agentskills.io spec
-        run: |
-          chmod +x .github/scripts/ci/validate-skills.sh
-          .github/scripts/ci/validate-skills.sh
-
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # Format Check
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # ── Format Check ──────────────────────────────────────────────────────
   format-check:
     name: Format Check
     runs-on: ubuntu-latest
@@ -97,14 +73,12 @@ jobs:
       - name: Check formatting
         run: npx prettier --check '**/*.{md,json,yml,yaml}'
 
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # CI Summary
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # ── CI Summary + Auto-Issue Management ────────────────────────────────
   ci-summary:
     name: CI Summary
     runs-on: ubuntu-latest
     if: always()
-    needs: [lint-markdown, lint-shell, validate-skills, format-check]
+    needs: [lint-markdown, lint-shell, format-check]
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -119,17 +93,14 @@ jobs:
         env:
           LINT_MD_RESULT: ${{ needs.lint-markdown.result }}
           LINT_SHELL_RESULT: ${{ needs.lint-shell.result }}
-          VALIDATE_SKILLS_RESULT: ${{ needs.validate-skills.result }}
           FORMAT_RESULT: ${{ needs.format-check.result }}
         run: |
           echo "lint-markdown=${LINT_MD_RESULT}" >> "$GITHUB_OUTPUT"
           echo "lint-shell=${LINT_SHELL_RESULT}" >> "$GITHUB_OUTPUT"
-          echo "validate-skills=${VALIDATE_SKILLS_RESULT}" >> "$GITHUB_OUTPUT"
           echo "format-check=${FORMAT_RESULT}" >> "$GITHUB_OUTPUT"
 
           if [[ "${LINT_MD_RESULT}" == "success" && \
                 "${LINT_SHELL_RESULT}" == "success" && \
-                "${VALIDATE_SKILLS_RESULT}" == "success" && \
                 "${FORMAT_RESULT}" == "success" ]]; then
             echo "overall=success" >> "$GITHUB_OUTPUT"
           else
@@ -140,7 +111,6 @@ jobs:
         env:
           LINT_MD_RESULT: ${{ needs.lint-markdown.result }}
           LINT_SHELL_RESULT: ${{ needs.lint-shell.result }}
-          VALIDATE_SKILLS_RESULT: ${{ needs.validate-skills.result }}
           FORMAT_RESULT: ${{ needs.format-check.result }}
           OVERALL_RESULT: ${{ steps.result.outputs.overall }}
         run: |
@@ -150,7 +120,6 @@ jobs:
           echo "|-----|--------|" >> "$GITHUB_STEP_SUMMARY"
           echo "| Markdown Lint | \`${LINT_MD_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Shell Lint | \`${LINT_SHELL_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Skills Validation | \`${VALIDATE_SKILLS_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Format Check | \`${FORMAT_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
@@ -160,8 +129,7 @@ jobs:
             echo "**Overall: One or more checks failed.**" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # --- Failure handling (main branch only) ---
-
+      # ── Failure handling (main branch only) ───────────────────────────
       - name: Handle lint-markdown failure
         if: >-
           always() && github.ref == 'refs/heads/main' && needs.lint-markdown.result == 'failure'
@@ -180,15 +148,6 @@ jobs:
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: .github/scripts/ci/on-failure.sh "lint-shell" "${RUN_URL}"
 
-      - name: Handle validate-skills failure
-        if: >-
-          always() && github.ref == 'refs/heads/main' && needs.validate-skills.result == 'failure'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_URL:
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: .github/scripts/ci/on-failure.sh "validate-skills" "${RUN_URL}"
-
       - name: Handle format-check failure
         if: >-
           always() && github.ref == 'refs/heads/main' && needs.format-check.result == 'failure'
@@ -198,8 +157,7 @@ jobs:
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: .github/scripts/ci/on-failure.sh "format-check" "${RUN_URL}"
 
-      # --- Success handling (main branch only) ---
-
+      # ── Success handling (main branch only) ───────────────────────────
       - name: Handle lint-markdown success
         if: >-
           always() && github.ref == 'refs/heads/main' && needs.lint-markdown.result == 'success'
@@ -214,13 +172,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/ci/on-success.sh "lint-shell"
 
-      - name: Handle validate-skills success
-        if: >-
-          always() && github.ref == 'refs/heads/main' && needs.validate-skills.result == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: .github/scripts/ci/on-success.sh "validate-skills"
-
       - name: Handle format-check success
         if: >-
           always() && github.ref == 'refs/heads/main' && needs.format-check.result == 'success'
@@ -228,10 +179,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/ci/on-success.sh "format-check"
 
-      # --- Final gate ---
-
+      # ── Final gate ────────────────────────────────────────────────────
       - name: Fail if any job failed
         if: always() && steps.result.outputs.overall == 'failure'
         run: |
           echo "::error::CI failed. See individual job results above."
           exit 1
+```
+
+**Key design decisions:**
+
+- `concurrency` cancels in-progress runs on the same branch (saves CI minutes on rapid pushes)
+- `permissions` requests only `contents: read` + `issues: write` (least privilege)
+- `ci-summary` runs `if: always()` so it executes even when lint jobs fail
+- Each failure/success handler has its own step with an `if:` condition — this way a failure in one
+  handler doesn't block others
+- `RUN_URL` is built from safe GitHub context values (`server_url`, `repository`, `run_id`)
+
+**Shell lint:** Must use `severity: warning` to skip SC1091 (note-level, flagged on dynamic `source`
+paths that shellcheck can't resolve statically).

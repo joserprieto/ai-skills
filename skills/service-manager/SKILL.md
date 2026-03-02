@@ -7,9 +7,8 @@ description: >-
   start/stop/status/tail/logs.
 license: MIT
 metadata:
-  author: Jose R. Prieto <hi at joserprieto dot es>
+  author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.3.0'
-  status: STABLE
 ---
 
 # Service Manager Pattern

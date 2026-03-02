@@ -1,6 +1,9 @@
+The Makefile is the project's command center. All developer operations go through `make` targets.
+
+```makefile
 # ==================================================================================== #
-# PROJECT: AI Skills
-# DESCRIPTION: Reusable AI agent skills for Claude Code and other AI tools
+# PROJECT: PROJECT_NAME_HERE
+# DESCRIPTION: PROJECT_DESCRIPTION_HERE
 # ==================================================================================== #
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -11,7 +14,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Project metadata
-PROJECT_NAME := AI Skills
+PROJECT_NAME := Project Name
 VERSION := 0.1.0
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -132,14 +135,15 @@ check/deps: ## Check required dependencies
 install: ## Install project dependencies
 	$(call print_header,Installing Dependencies)
 	@npm install
-	$(call print_success,Dependencies installed)
+	@git config core.hooksPath .githooks
+	$(call print_success,Dependencies installed + git hooks configured)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Linting
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 .PHONY: lint
-lint: lint/md lint/shell lint/skills ## Run all linters
+lint: lint/md lint/shell ## Run all linters
 	$(call print_success,All linters passed)
 
 .PHONY: lint/fix
@@ -161,14 +165,11 @@ lint/md/fix: ## Fix markdown lint issues automatically
 .PHONY: lint/shell
 lint/shell: ## Lint shell scripts (shellcheck)
 	$(call print_header,Linting Shell Scripts)
-	@shellcheck --severity=warning -x .github/scripts/ci/*.sh .github/scripts/issues/*.sh .github/scripts/issues/lib/*.sh
+	@shellcheck --severity=warning -x \
+		.github/scripts/ci/*.sh \
+		.github/scripts/issues/*.sh \
+		.github/scripts/issues/lib/*.sh
 	$(call print_success,Shell lint passed)
-
-.PHONY: lint/skills
-lint/skills: ## Validate skills against agentskills.io spec
-	$(call print_header,Validating Skills)
-	@.github/scripts/ci/validate-skills.sh
-	$(call print_success,Skills validation passed)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Formatting
@@ -199,7 +200,8 @@ qa: lint format/check ## Run all quality checks
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #
 # commit-and-tag-version bumps files + changelog only (--skip.commit --skip.tag),
-# then we create the commit and tag manually.
+# then we create the commit and tag manually. This ensures git hooks run and
+# we control exactly which files are staged.
 
 RELEASE_FILES := CHANGELOG.md .semver Makefile
 
@@ -274,3 +276,23 @@ help: ## Show this help message
 	@echo "  $(DIM)make lint$(RESET)            # Run all linters"
 	@echo "  $(DIM)make lint/fix$(RESET)        # Auto-fix issues"
 	@echo ""
+```
+
+**Target naming:** `verb/noun` — `lint/md`, `lint/shell`, `lint/md/fix`, `format/check`,
+`release/patch`. This convention keeps targets discoverable and avoids ambiguity.
+
+**Colored output:** Uses `tput` with a `$(TERM)` check for non-terminal fallback. The `print_*`
+macros provide consistent formatting across all targets.
+
+**Help target:** Uses `grep -E` on `##` comments after target definitions. Any target with a `##`
+comment automatically appears in `make help`.
+
+**Release pipeline flow:**
+
+1. `make release` (or `release/patch`, `release/minor`, `release/major`)
+2. Runs `qa` prerequisite (lint + format check — if anything fails, release aborts)
+3. Runs `commit-and-tag-version --skip.commit --skip.tag` to bump `.semver`, `Makefile`, and
+   generate `CHANGELOG.md`
+4. Stages only `RELEASE_FILES` (CHANGELOG.md, .semver, Makefile)
+5. Creates a `chore(release): vX.Y.Z` commit
+6. Creates an annotated `vX.Y.Z` tag
