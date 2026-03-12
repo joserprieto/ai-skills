@@ -1,0 +1,153 @@
+#!/bin/bash
+# =============================================================================
+# Pre-commit hook — runs ONLY on staged files for speed
+# =============================================================================
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Colors (TTY-aware)
+# ─────────────────────────────────────────────────────────────────────────────
+if [ -t 1 ]; then
+    RED=$(tput setaf 1)
+    GREEN=$(tput setaf 2)
+    YELLOW=$(tput setaf 3)
+    BOLD=$(tput bold)
+    RESET=$(tput sgr0)
+else
+    RED="" GREEN="" YELLOW="" BOLD="" RESET=""
+fi
+
+PASS="${GREEN}✓${RESET}"
+FAIL="${RED}✗${RESET}"
+WARN="${YELLOW}⚠${RESET}"
+
+ERRORS=0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Collect staged files (only added/modified, not deleted)
+# ─────────────────────────────────────────────────────────────────────────────
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "${PASS} No staged files — skipping pre-commit checks"
+    exit 0
+fi
+
+STAGED_MD=$(echo "$STAGED_FILES" | grep -E '\.md$' || true)
+STAGED_SH=$(echo "$STAGED_FILES" | grep -E '\.sh$' || true)
+STAGED_FORMAT=$(echo "$STAGED_FILES" | grep -E '\.(md|json|yml|yaml)$' || true)
+
+echo "${BOLD}Pre-commit checks${RESET}"
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Personal data leak detection
+# ─────────────────────────────────────────────────────────────────────────────
+echo -n "  Scanning for personal data leaks... "
+
+LEAK_PATTERNS=(
+    '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'  # Email addresses
+    'AKIA[0-9A-Z]{16}'                                    # AWS access keys
+    'sk-[a-zA-Z0-9]{20,}'                                 # OpenAI/Stripe keys
+    'ghp_[a-zA-Z0-9]{36}'                                 # GitHub PATs
+    'glpat-[a-zA-Z0-9_-]{20}'                              # GitLab PATs
+    'xox[bprs]-[a-zA-Z0-9-]+'                              # Slack tokens
+)
+
+LEAK_FOUND=0
+for file in $STAGED_FILES; do
+    # Skip binary files and this hook itself
+    if ! file "$file" 2>/dev/null | grep -q "text"; then
+        continue
+    fi
+    STAGED_CONTENT=$(git show ":$file" 2>/dev/null || true)
+    if [ -z "$STAGED_CONTENT" ]; then
+        continue
+    fi
+    for pattern in "${LEAK_PATTERNS[@]}"; do
+        if echo "$STAGED_CONTENT" | grep -qE "$pattern"; then
+            if [ $LEAK_FOUND -eq 0 ]; then
+                echo "${FAIL}"
+                LEAK_FOUND=1
+            fi
+            echo "    ${RED}Potential leak in${RESET} $file (pattern: ${pattern:0:30}...)"
+        fi
+    done
+done
+
+if [ $LEAK_FOUND -eq 0 ]; then
+    echo "${PASS}"
+else
+    echo ""
+    echo "    ${WARN} Review flagged files. Use ${BOLD}git commit --no-verify${RESET} to bypass if false positive."
+    ERRORS=$((ERRORS + 1))
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Prettier format check (staged md/json/yml/yaml only)
+# ─────────────────────────────────────────────────────────────────────────────
+if [ -n "$STAGED_FORMAT" ]; then
+    echo -n "  Checking prettier formatting... "
+    if command -v npx >/dev/null 2>&1; then
+        # shellcheck disable=SC2086
+        if npx prettier --check $STAGED_FORMAT >/dev/null 2>&1; then
+            echo "${PASS}"
+        else
+            echo "${FAIL}"
+            echo "    Run: ${BOLD}make format${RESET} to fix"
+            ERRORS=$((ERRORS + 1))
+        fi
+    else
+        echo "${WARN} npx not found — skipped"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Markdown lint (staged .md only)
+# ─────────────────────────────────────────────────────────────────────────────
+if [ -n "$STAGED_MD" ]; then
+    echo -n "  Linting markdown files... "
+    if command -v npx >/dev/null 2>&1; then
+        # shellcheck disable=SC2086
+        if npx markdownlint-cli2 $STAGED_MD >/dev/null 2>&1; then
+            echo "${PASS}"
+        else
+            echo "${FAIL}"
+            echo "    Run: ${BOLD}make lint/md/fix${RESET} to auto-fix"
+            ERRORS=$((ERRORS + 1))
+        fi
+    else
+        echo "${WARN} npx not found — skipped"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. Shellcheck (staged .sh only)
+# ─────────────────────────────────────────────────────────────────────────────
+if [ -n "$STAGED_SH" ]; then
+    echo -n "  Linting shell scripts... "
+    if command -v shellcheck >/dev/null 2>&1; then
+        # shellcheck disable=SC2086
+        if shellcheck --severity=warning -x $STAGED_SH >/dev/null 2>&1; then
+            echo "${PASS}"
+        else
+            echo "${FAIL}"
+            echo "    Run: ${BOLD}shellcheck --severity=warning${RESET} on flagged files"
+            ERRORS=$((ERRORS + 1))
+        fi
+    else
+        echo "${WARN} shellcheck not found — skipped"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Result
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+if [ $ERRORS -gt 0 ]; then
+    echo "${FAIL} ${RED}Pre-commit failed${RESET} ($ERRORS check(s) failed)"
+    echo "  Fix issues or use ${BOLD}git commit --no-verify${RESET} to bypass"
+    exit 1
+fi
+
+echo "${PASS} ${GREEN}All pre-commit checks passed${RESET}"

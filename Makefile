@@ -129,10 +129,12 @@ check/deps: ## Check required dependencies
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 .PHONY: install
-install: ## Install project dependencies
+install: ## Install project dependencies and configure git hooks
 	$(call print_header,Installing Dependencies)
 	@npm install
 	$(call print_success,Dependencies installed)
+	@git config core.hooksPath .githooks
+	$(call print_success,Git hooks configured (.githooks/))
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Linting
