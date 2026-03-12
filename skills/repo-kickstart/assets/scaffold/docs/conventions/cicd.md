@@ -65,13 +65,13 @@ This section applies only to projects hosted on GitHub.
 
 ### Workflows
 
-| Workflow          | Trigger                        | Purpose                         |
-|-------------------|--------------------------------|---------------------------------|
-| `ci.yml`          | Push to main, PRs              | Main CI pipeline                |
-| `labels.yml`      | Changes to labels config       | Sync GitHub labels              |
-| `release.yml`     | Version tag pushed             | Create GitHub Release (optional)|
-| `stale.yml`       | Scheduled                      | Close stale issues/PRs          |
-| `dependabot.yml`  | Scheduled (weekly)             | Automated dependency updates    |
+| Workflow         | Trigger                  | Purpose                          |
+| ---------------- | ------------------------ | -------------------------------- |
+| `ci.yml`         | Push to main, PRs        | Main CI pipeline                 |
+| `labels.yml`     | Changes to labels config | Sync GitHub labels               |
+| `release.yml`    | Version tag pushed       | Create GitHub Release (optional) |
+| `stale.yml`      | Scheduled                | Close stale issues/PRs           |
+| `dependabot.yml` | Scheduled (weekly)       | Automated dependency updates     |
 
 ### Self-Healing Issue Management
 
@@ -111,7 +111,7 @@ All third-party GitHub Actions MUST be pinned to commit SHAs, not tags:
 
 ```yaml
 # Good — immutable reference
-- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
 # Bad — tag can be mutated
 - uses: actions/checkout@v4

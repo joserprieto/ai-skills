@@ -164,13 +164,13 @@ empty), amend the commit, and re-run the release.
 ### pyproject.toml not bumped
 
 If using Python projects, ensure the `writeVersion` regex in `.versionrc.js` has the `/m`
-(multiline) flag. Without it, the regex won't match `version = "..."` because it's not at the
-start of the file.
+(multiline) flag. Without it, the regex won't match `version = "..."` because it's not at the start
+of the file.
 
 ## Configuration Files
 
 | File                    | Purpose                            |
-|-------------------------|------------------------------------|
+| ----------------------- | ---------------------------------- |
 | `.semver`               | Single source of truth for version |
 | `.versionrc.js`         | Release tool configuration         |
 | `.changelog-templates/` | CHANGELOG format templates         |

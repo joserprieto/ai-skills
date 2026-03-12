@@ -194,16 +194,16 @@ templates that apply to any project using this infrastructure.
 
 Copy each file from the scaffold templates:
 
-| Target file                         | Scaffold template                                                                                                |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `docs/conventions/versioning.md`    | [assets/scaffold/docs/conventions/versioning.md](assets/scaffold/docs/conventions/versioning.md)                 |
-| `docs/conventions/commits.md`       | [assets/scaffold/docs/conventions/commits.md](assets/scaffold/docs/conventions/commits.md)                       |
-| `docs/conventions/changelog.md`     | [assets/scaffold/docs/conventions/changelog.md](assets/scaffold/docs/conventions/changelog.md)                   |
-| `docs/conventions/releases.md`      | [assets/scaffold/docs/conventions/releases.md](assets/scaffold/docs/conventions/releases.md)                     |
-| `docs/conventions/build-tools.md`   | [assets/scaffold/docs/conventions/build-tools.md](assets/scaffold/docs/conventions/build-tools.md)               |
-| `docs/conventions/dev-workflow.md`  | [assets/scaffold/docs/conventions/dev-workflow.md](assets/scaffold/docs/conventions/dev-workflow.md)              |
-| `docs/conventions/cicd.md`          | [assets/scaffold/docs/conventions/cicd.md](assets/scaffold/docs/conventions/cicd.md)                             |
-| `docs/conventions/testing.md`       | [assets/scaffold/docs/conventions/testing.md](assets/scaffold/docs/conventions/testing.md)                       |
+| Target file                        | Scaffold template                                                                                    |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `docs/conventions/versioning.md`   | [assets/scaffold/docs/conventions/versioning.md](assets/scaffold/docs/conventions/versioning.md)     |
+| `docs/conventions/commits.md`      | [assets/scaffold/docs/conventions/commits.md](assets/scaffold/docs/conventions/commits.md)           |
+| `docs/conventions/changelog.md`    | [assets/scaffold/docs/conventions/changelog.md](assets/scaffold/docs/conventions/changelog.md)       |
+| `docs/conventions/releases.md`     | [assets/scaffold/docs/conventions/releases.md](assets/scaffold/docs/conventions/releases.md)         |
+| `docs/conventions/build-tools.md`  | [assets/scaffold/docs/conventions/build-tools.md](assets/scaffold/docs/conventions/build-tools.md)   |
+| `docs/conventions/dev-workflow.md` | [assets/scaffold/docs/conventions/dev-workflow.md](assets/scaffold/docs/conventions/dev-workflow.md) |
+| `docs/conventions/cicd.md`         | [assets/scaffold/docs/conventions/cicd.md](assets/scaffold/docs/conventions/cicd.md)                 |
+| `docs/conventions/testing.md`      | [assets/scaffold/docs/conventions/testing.md](assets/scaffold/docs/conventions/testing.md)           |
 
 After copying, customize:
 
@@ -363,33 +363,33 @@ covering email obfuscation, pre-commit hooks, history purge, and `.gitignore` pa
 
 ## Common Mistakes
 
-| Mistake                                | Fix                                                                   |
-| -------------------------------------- | --------------------------------------------------------------------- |
-| markdownlint scans node_modules        | Use `.markdownlint-cli2.jsonc` with `ignores` array                   |
-| shellcheck fails on dynamic `source`   | `--severity=warning` in Makefile AND `severity: warning` in CI action |
-| prettier reformats CHANGELOG           | Add `CHANGELOG.md` to `.prettierignore`                               |
-| CI workflow interpolates user input    | Always use `env:` variables, never direct `${{ }}` in `run:`          |
-| commit-and-tag-version fails on commit | Use `--skip.commit --skip.tag`, then commit manually                  |
-| `.semver` needs trailing newline       | Some tools strip it; configure `end-of-file-fixer` to exclude         |
-| Personal email in CODE_OF_CONDUCT      | Use obfuscated format: `hi [at] example [dot] com`                    |
-| Personal data in git history           | `git rm` only removes from HEAD; use `git filter-repo` to purge       |
-| Personal paths in examples             | Use generic paths (`~/Projects/...`) not real usernames               |
-| Squash doesn't purge history           | Squash only rewrites HEAD chain; old refs survive in reflog/remotes   |
-| `.gitkeep` for empty directories       | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks    |
-| Dependabot PRs have no labels          | Labels must pre-exist in the repo; sync `labels.json` first           |
-| CI auto-close doesn't find issues      | Missing `job:*` labels; run labels sync workflow before first CI run  |
-| Content filter blocks file creation    | Use `cp` + `sed` for CoC/Security files — never generate through model |
-| `--first-release` keeps version 0.0.0 | Use `--release-as minor` for first release; `--first-release` skips bump |
+| Mistake                                | Fix                                                                         |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| markdownlint scans node_modules        | Use `.markdownlint-cli2.jsonc` with `ignores` array                         |
+| shellcheck fails on dynamic `source`   | `--severity=warning` in Makefile AND `severity: warning` in CI action       |
+| prettier reformats CHANGELOG           | Add `CHANGELOG.md` to `.prettierignore`                                     |
+| CI workflow interpolates user input    | Always use `env:` variables, never direct `${{ }}` in `run:`                |
+| commit-and-tag-version fails on commit | Use `--skip.commit --skip.tag`, then commit manually                        |
+| `.semver` needs trailing newline       | Some tools strip it; configure `end-of-file-fixer` to exclude               |
+| Personal email in CODE_OF_CONDUCT      | Use obfuscated format: `hi [at] example [dot] com`                          |
+| Personal data in git history           | `git rm` only removes from HEAD; use `git filter-repo` to purge             |
+| Personal paths in examples             | Use generic paths (`~/Projects/...`) not real usernames                     |
+| Squash doesn't purge history           | Squash only rewrites HEAD chain; old refs survive in reflog/remotes         |
+| `.gitkeep` for empty directories       | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks          |
+| Dependabot PRs have no labels          | Labels must pre-exist in the repo; sync `labels.json` first                 |
+| CI auto-close doesn't find issues      | Missing `job:*` labels; run labels sync workflow before first CI run        |
+| Content filter blocks file creation    | Use `cp` + `sed` for CoC/Security files — never generate through model      |
+| `--first-release` keeps version 0.0.0  | Use `--release-as minor` for first release; `--first-release` skips bump    |
 | CHANGELOG header duplicated            | Start with empty `CHANGELOG.md`; `config.header` in `.versionrc.js` adds it |
 | `pyproject.toml` not bumped            | `writeVersion` regex needs `/m` (multiline) flag; `version =` is not at BOF |
-| `RELEASE_FILES` missing bump targets   | Every file in `bumpFiles` must also appear in `RELEASE_FILES` in Makefile |
-| Manual `git tag` instead of `make`     | Always use `make release/*` — manual tags skip CHANGELOG + version bumps |
+| `RELEASE_FILES` missing bump targets   | Every file in `bumpFiles` must also appear in `RELEASE_FILES` in Makefile   |
+| Manual `git tag` instead of `make`     | Always use `make release/*` — manual tags skip CHANGELOG + version bumps    |
 
 ## Content Filtering — Template Files with Sensitive Language
 
-**CRITICAL**: Some template files contain language that triggers API content filtering (e.g., Code of
-Conduct mentions "harassment", "sexual", "ban"). When AI agents attempt to generate this content, the
-entire output gets blocked — including other legitimate files in the same batch.
+**CRITICAL**: Some template files contain language that triggers API content filtering (e.g., Code
+of Conduct mentions "harassment", "sexual", "ban"). When AI agents attempt to generate this content,
+the entire output gets blocked — including other legitimate files in the same batch.
 
 ### Affected Files
 
@@ -399,7 +399,8 @@ entire output gets blocked — including other legitimate files in the same batc
 
 ### Required Approach
 
-**NEVER generate these files' content through the model.** Instead, use shell-level copy + substitution:
+**NEVER generate these files' content through the model.** Instead, use shell-level copy +
+substitution:
 
 ```bash
 # Copy template and replace placeholders with sed

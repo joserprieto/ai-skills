@@ -16,8 +16,8 @@ make test
 # Expected: FAIL
 ```
 
-The failing test defines the expected behavior. If it passes without implementation, either the
-test is wrong or the feature already exists.
+The failing test defines the expected behavior. If it passes without implementation, either the test
+is wrong or the feature already exists.
 
 ### 2. GREEN — Write Minimal Code to Pass
 
