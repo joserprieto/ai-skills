@@ -1,0 +1,56 @@
+# work-extractor configuration
+# All values can be overridden via CLI flags.
+
+# Where to search for JSONL session files (glob pattern).
+search_path: '~/.ai/claude-code/accounts/*/profiles/*/projects/*/'
+
+# Timezone for interpreting dates and grouping blocks by day.
+timezone: 'Europe/Madrid'
+
+# Minutes of inactivity between messages to split into separate work blocks.
+gap_threshold_minutes: 30
+
+# Output format: yaml or json.
+output_format: yaml
+
+# Message sampling — controls how many user messages are captured per block
+# to provide semantic context without excessive output.
+sampling:
+  # Number of messages from the start of the block.
+  first_messages: 3
+  # Number of messages from the end of the block.
+  last_messages: 2
+  # Maximum total messages per block (first + last + sampled from middle).
+  max_total_messages: 10
+  # Maximum characters per individual message (longer messages are truncated).
+  max_chars_per_message: 500
+  # Maximum total characters for all sampled messages in a block.
+  max_chars_total: 5000
+
+# Model pricing — USD per 1M tokens.
+# Source: https://docs.anthropic.com/en/docs/about-claude/models
+# Last updated: 2026-03-12
+#
+# Fields:
+#   input:       standard input tokens (non-cached)
+#   output:      output tokens
+#   cache_write: prompt cache creation (typically 1.25x input)
+#   cache_read:  prompt cache hits (typically 0.1x input)
+pricing:
+  claude-opus-4-6:
+    input: 5.0
+    output: 25.0
+    cache_write: 6.25
+    cache_read: 0.50
+
+  claude-sonnet-4-6:
+    input: 3.0
+    output: 15.0
+    cache_write: 3.75
+    cache_read: 0.30
+
+  claude-haiku-4-5-20251001:
+    input: 1.0
+    output: 5.0
+    cache_write: 1.25
+    cache_read: 0.10
