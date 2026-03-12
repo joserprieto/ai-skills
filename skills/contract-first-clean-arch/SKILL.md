@@ -493,6 +493,9 @@ When evaluating a project, score each sub-concern 1-5:
 
 See `examples/` for complete working examples organized in three subdirectories:
 
-- **`contracts/`** — Real YAML schemas (JSON Schema Draft 2020-12), OpenAPI 3.1.0, and AsyncAPI 3.0.0 specs
-- **`patterns/`** — Language-agnostic architecture patterns (criteria, ACL, repository, strategy, infrastructure doubling)
-- **`snippets/`** — Architecture patterns as TypeScript notation (entity, value object, port, repository, composition root, test doubles, Object Mother, frontend store)
+- **`contracts/`** — Real YAML schemas (JSON Schema Draft 2020-12), OpenAPI 3.1.0, and AsyncAPI
+  3.0.0 specs
+- **`patterns/`** — Language-agnostic architecture patterns (criteria, ACL, repository, strategy,
+  infrastructure doubling)
+- **`snippets/`** — Architecture patterns as TypeScript notation (entity, value object, port,
+  repository, composition root, test doubles, Object Mother, frontend store)

@@ -1,7 +1,7 @@
 # Theme Configurations — joserprieto Brand
 
-Copy-paste configurations for diagramming tools. All values derive from the joserprieto OKHSL palette
-defined in `SKILL.md`.
+Copy-paste configurations for diagramming tools. All values derive from the joserprieto OKHSL
+palette defined in `SKILL.md`.
 
 ## Mermaid Theme Variables
 

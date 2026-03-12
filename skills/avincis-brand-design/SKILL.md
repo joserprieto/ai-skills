@@ -207,37 +207,37 @@ Five corporate colors with full scales. Use the EXACT hex values below.
 ### Step 4: Draw.io / Diagrams Convention
 
 For UML diagram shapes and style strings, use the `drawio-uml-shapes` skill. Apply the Avincis color
-overrides below to its semantic roles. These tokens apply to every draw.io, PlantUML, Mermaid, or SVG
-diagram.
+overrides below to its semantic roles. These tokens apply to every draw.io, PlantUML, Mermaid, or
+SVG diagram.
 
 **Avincis semantic role overrides** (maps `drawio-uml-shapes` roles to Avincis tokens):
 
-| Semantic Role        | Avincis Token           | Fill        | Stroke      | Font Color  |
-| -------------------- | ----------------------- | ----------- | ----------- | ----------- |
-| `surface-device`     | blue.100 / blue.800     | `#E5E7F1`  | `#242846`   | `#242846`   |
-| `surface-default`    | white / blue.800        | `#FFFFFF`   | `#242846`   | `#242846`   |
-| `surface-muted`      | blue.50 / blue.200      | `#F4F5F9`  | `#C8CCE2`   | `#242846`   |
-| `text-primary`       | blue.800                | —           | —           | `#242846`   |
-| `text-secondary`     | slate.500               | —           | —           | `#64748B`   |
-| `category-appserver` | yellow.50 / yellow.400  | `#FCF9F3`  | `#FFC100`   | `#242846`   |
-| `category-database`  | sky.100 / sky.500       | `#E1EDF8`  | `#5D90C2`   | `#242846`   |
-| `category-broker`    | sky.100 / sky.400       | `#E1EDF8`  | `#90BAE4`   | `#242846`   |
-| `category-proxy`     | green.50 / green.500    | `#F0FAF1`  | `#009638`   | `#242846`   |
-| `category-container` | yellow.50 / yellow.400  | `#FCF9F3`  | `#FFC100`   | `#242846`   |
-| `category-infra`     | green.50 / green.500    | `#F0FAF1`  | `#009638`   | `#242846`   |
-| `semantic-critical`  | red.50 / red.400        | `#FFF1EE`  | `#EB4529`   | `#EB4529`   |
-| `semantic-warning`   | yellow.100 / yellow.400 | `#FFF3D6`  | `#FFC100`   | `#242846`   |
-| `semantic-success`   | green.50 / green.500    | `#F0FAF1`  | `#009638`   | `#242846`   |
-| `semantic-info`      | sky.100 / sky.500       | `#E1EDF8`  | `#5D90C2`   | `#242846`   |
-| `special-deployspec` | yellow.100 / yellow.400 | `#FFF3D6`  | `#FFC100`   | `#242846`   |
-| `special-schema`     | sky.100 / sky.500       | `#E1EDF8`  | `#5D90C2`   | `#242846`   |
+| Semantic Role        | Avincis Token           | Fill      | Stroke    | Font Color |
+| -------------------- | ----------------------- | --------- | --------- | ---------- |
+| `surface-device`     | blue.100 / blue.800     | `#E5E7F1` | `#242846` | `#242846`  |
+| `surface-default`    | white / blue.800        | `#FFFFFF` | `#242846` | `#242846`  |
+| `surface-muted`      | blue.50 / blue.200      | `#F4F5F9` | `#C8CCE2` | `#242846`  |
+| `text-primary`       | blue.800                | —         | —         | `#242846`  |
+| `text-secondary`     | slate.500               | —         | —         | `#64748B`  |
+| `category-appserver` | yellow.50 / yellow.400  | `#FCF9F3` | `#FFC100` | `#242846`  |
+| `category-database`  | sky.100 / sky.500       | `#E1EDF8` | `#5D90C2` | `#242846`  |
+| `category-broker`    | sky.100 / sky.400       | `#E1EDF8` | `#90BAE4` | `#242846`  |
+| `category-proxy`     | green.50 / green.500    | `#F0FAF1` | `#009638` | `#242846`  |
+| `category-container` | yellow.50 / yellow.400  | `#FCF9F3` | `#FFC100` | `#242846`  |
+| `category-infra`     | green.50 / green.500    | `#F0FAF1` | `#009638` | `#242846`  |
+| `semantic-critical`  | red.50 / red.400        | `#FFF1EE` | `#EB4529` | `#EB4529`  |
+| `semantic-warning`   | yellow.100 / yellow.400 | `#FFF3D6` | `#FFC100` | `#242846`  |
+| `semantic-success`   | green.50 / green.500    | `#F0FAF1` | `#009638` | `#242846`  |
+| `semantic-info`      | sky.100 / sky.500       | `#E1EDF8` | `#5D90C2` | `#242846`  |
+| `special-deployspec` | yellow.100 / yellow.400 | `#FFF3D6` | `#FFC100` | `#242846`  |
+| `special-schema`     | sky.100 / sky.500       | `#E1EDF8` | `#5D90C2` | `#242846`  |
 
 **Avincis-specific element categories** (beyond standard semantic roles):
 
-| Element    | Fill                  | Stroke                 | Font Color            | Example          |
-| ---------- | --------------------- | ---------------------- | --------------------- | ---------------- |
-| Algorithms | `sky.100` (#E1EDF8)   | `sky.500` (#5D90C2)    | `blue.800` (#242846)  | Processing nodes |
-| Deprecated | `slate.200` (#E2E8F0) | `slate.400` (#94A3B8)  | `slate.400` (#94A3B8) | Unused services  |
+| Element    | Fill                  | Stroke                | Font Color            | Example          |
+| ---------- | --------------------- | --------------------- | --------------------- | ---------------- |
+| Algorithms | `sky.100` (#E1EDF8)   | `sky.500` (#5D90C2)   | `blue.800` (#242846)  | Processing nodes |
+| Deprecated | `slate.200` (#E2E8F0) | `slate.400` (#94A3B8) | `slate.400` (#94A3B8) | Unused services  |
 
 **Avincis boundary conventions** (infrastructure groups — not UML, Avincis-specific):
 

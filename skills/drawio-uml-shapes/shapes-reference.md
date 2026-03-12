@@ -1,31 +1,31 @@
 # Draw.io UML Shapes Reference
 
-Companion reference for `SKILL.md`. Contains exact draw.io style strings for every UML 2.5
-shape type, organized by diagram kind. All styles use **brand-agnostic defaults** based on the
-Tailwind Slate palette. A brand layer (loaded separately) overrides fonts and colors at render
-time; this file provides the neutral baseline.
+Companion reference for `SKILL.md`. Contains exact draw.io style strings for every UML 2.5 shape
+type, organized by diagram kind. All styles use **brand-agnostic defaults** based on the Tailwind
+Slate palette. A brand layer (loaded separately) overrides fonts and colors at render time; this
+file provides the neutral baseline.
 
 ## Semantic color defaults
 
-| Role | Fill | Stroke | Purpose |
-|------|------|--------|---------|
-| `surface-device` | `#F1F5F9` | `#475569` | Device backgrounds |
-| `surface-default` | `#FFFFFF` | `#475569` | Artifacts, default fills |
-| `surface-muted` | `#F8FAFC` | `#CBD5E1` | Subtle backgrounds |
-| `text-primary` | — | `#1E293B` | Main text, fontColor |
-| `text-secondary` | — | `#475569` | Secondary text |
-| `category-appserver` | `#FFFBEB` | `#D97706` | App servers, JVMs |
-| `category-database` | `#EBF5FB` | `#2563EB` | Database engines |
-| `category-broker` | `#F5F3FF` | `#7C3AED` | Message brokers |
-| `category-proxy` | `#F0FDF4` | `#16A34A` | Reverse proxies, LBs |
-| `category-container` | `#FFF7ED` | `#EA580C` | Container runtimes |
-| `category-infra` | `#F1F5F9` | `#64748B` | Infra daemons |
-| `semantic-critical` | `#FEF2F2` | `#DC2626` | EOL, alerts, failures |
-| `semantic-warning` | `#FFFBEB` | `#D97706` | Warnings |
-| `semantic-success` | `#F0FDF4` | `#16A34A` | OK, healthy |
-| `semantic-info` | `#EFF6FF` | `#2563EB` | Informational |
-| `special-deployspec` | `#FEF3C7` | `#D97706` | Deployment specs |
-| `special-schema` | `#EBF5FB` | `#2563EB` | Database schemas |
+| Role                 | Fill      | Stroke    | Purpose                  |
+| -------------------- | --------- | --------- | ------------------------ |
+| `surface-device`     | `#F1F5F9` | `#475569` | Device backgrounds       |
+| `surface-default`    | `#FFFFFF` | `#475569` | Artifacts, default fills |
+| `surface-muted`      | `#F8FAFC` | `#CBD5E1` | Subtle backgrounds       |
+| `text-primary`       | —         | `#1E293B` | Main text, fontColor     |
+| `text-secondary`     | —         | `#475569` | Secondary text           |
+| `category-appserver` | `#FFFBEB` | `#D97706` | App servers, JVMs        |
+| `category-database`  | `#EBF5FB` | `#2563EB` | Database engines         |
+| `category-broker`    | `#F5F3FF` | `#7C3AED` | Message brokers          |
+| `category-proxy`     | `#F0FDF4` | `#16A34A` | Reverse proxies, LBs     |
+| `category-container` | `#FFF7ED` | `#EA580C` | Container runtimes       |
+| `category-infra`     | `#F1F5F9` | `#64748B` | Infra daemons            |
+| `semantic-critical`  | `#FEF2F2` | `#DC2626` | EOL, alerts, failures    |
+| `semantic-warning`   | `#FFFBEB` | `#D97706` | Warnings                 |
+| `semantic-success`   | `#F0FDF4` | `#16A34A` | OK, healthy              |
+| `semantic-info`      | `#EFF6FF` | `#2563EB` | Informational            |
+| `special-deployspec` | `#FEF3C7` | `#D97706` | Deployment specs         |
+| `special-schema`     | `#EBF5FB` | `#2563EB` | Database schemas         |
 
 **Font:** `Sans-serif` everywhere (brand layer overrides this).
 
@@ -52,17 +52,18 @@ shape=cube;size=10;direction=south;boundedLbl=1;verticalAlign=top;align=left;spa
 
 **Key parameters:**
 
-| Parameter | Value | Purpose |
-|-----------|-------|---------|
-| `shape=cube` | native | 3D cube with perspective (NOT `mxgraph.uml.node`) |
-| `size=10` | pixels | Depth of the 3D face |
-| `direction=south` | — | Top face visible (standard UML deployment view) |
-| `boundedLbl=1` | boolean | Label stays within cube body |
-| `recursiveResize=0` | boolean | Children do not auto-resize with parent |
+| Parameter           | Value   | Purpose                                           |
+| ------------------- | ------- | ------------------------------------------------- |
+| `shape=cube`        | native  | 3D cube with perspective (NOT `mxgraph.uml.node`) |
+| `size=10`           | pixels  | Depth of the 3D face                              |
+| `direction=south`   | —       | Top face visible (standard UML deployment view)   |
+| `boundedLbl=1`      | boolean | Label stays within cube body                      |
+| `recursiveResize=0` | boolean | Children do not auto-resize with parent           |
 
 **Containment:** Can contain Execution Environment, Artifact, nested Device.
 
-**Common mistake:** `shape=mxgraph.uml.node` renders a flat rectangle with a small 3D tab — always use `shape=cube`.
+**Common mistake:** `shape=mxgraph.uml.node` renders a flat rectangle with a small 3D tab — always
+use `shape=cube`.
 
 ### Execution Environment `<<executionEnvironment>>` [UML 2.0+]
 
@@ -76,14 +77,14 @@ shape=mxgraph.uml.component;whiteSpace=wrap;html=1;verticalAlign=top;align=left;
 
 **Color role by runtime type:**
 
-| Runtime kind | Fill | Stroke | Semantic role |
-|-------------|------|--------|---------------|
-| App server / JVM | `#FFFBEB` | `#D97706` | `category-appserver` |
-| Database engine | `#EBF5FB` | `#2563EB` | `category-database` |
-| Message broker | `#F5F3FF` | `#7C3AED` | `category-broker` |
-| Reverse proxy / LB | `#F0FDF4` | `#16A34A` | `category-proxy` |
-| Container runtime | `#FFF7ED` | `#EA580C` | `category-container` |
-| Infra daemon | `#F1F5F9` | `#64748B` | `category-infra` |
+| Runtime kind       | Fill      | Stroke    | Semantic role        |
+| ------------------ | --------- | --------- | -------------------- |
+| App server / JVM   | `#FFFBEB` | `#D97706` | `category-appserver` |
+| Database engine    | `#EBF5FB` | `#2563EB` | `category-database`  |
+| Message broker     | `#F5F3FF` | `#7C3AED` | `category-broker`    |
+| Reverse proxy / LB | `#F0FDF4` | `#16A34A` | `category-proxy`     |
+| Container runtime  | `#FFF7ED` | `#EA580C` | `category-container` |
+| Infra daemon       | `#F1F5F9` | `#64748B` | `category-infra`     |
 
 **Containment:** Must be child of Device. Can contain Artifact, Component.
 
@@ -103,13 +104,15 @@ shape=mxgraph.uml.artifact;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=
 
 Configuration governing how an artifact is deployed (web.xml, Dockerfile, application.yml).
 
-Uses `special-deployspec` colors. `fontStyle=2` renders italic to distinguish from regular artifacts.
+Uses `special-deployspec` colors. `fontStyle=2` renders italic to distinguish from regular
+artifacts.
 
 ```
 shape=mxgraph.uml.artifact;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontFamily=Sans-serif;fontSize=8;fontColor=#1E293B;fontStyle=2;
 ```
 
-**Containment:** Sibling of the artifact it configures, within the same Execution Environment or Device.
+**Containment:** Sibling of the artifact it configures, within the same Execution Environment or
+Device.
 
 ### Database `<<database>>` [custom]
 
@@ -123,11 +126,11 @@ shape=cylinder3;size=8;direction=south;boundedLbl=1;whiteSpace=wrap;html=1;verti
 
 **Key parameters:**
 
-| Parameter | Value | Purpose |
-|-----------|-------|---------|
-| `shape=cylinder3` | native | Database cylinder with cap |
-| `size=8` | pixels | Height of the top ellipse cap |
-| `boundedLbl=1` | boolean | Label stays within cylinder body |
+| Parameter         | Value   | Purpose                          |
+| ----------------- | ------- | -------------------------------- |
+| `shape=cylinder3` | native  | Database cylinder with cap       |
+| `size=8`          | pixels  | Height of the top ellipse cap    |
+| `boundedLbl=1`    | boolean | Label stays within cylinder body |
 
 **Containment:** Child of Device.
 
@@ -224,8 +227,8 @@ edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;e
 
 ## §2 Component Diagram
 
-UML 2.5 §11.6. Models the logical structure of a system — components, interfaces, ports, and
-their wiring.
+UML 2.5 §11.6. Models the logical structure of a system — components, interfaces, ports, and their
+wiring.
 
 ### Component [UML 1.x+]
 
@@ -292,7 +295,8 @@ Uses `surface-default` colors. Dimensions: 14x14 px.
 shape=mxgraph.uml.port;html=1;spacingBottom=0;fillColor=#FFFFFF;strokeColor=#475569;fontFamily=Sans-serif;fontSize=7;fontColor=#1E293B;
 ```
 
-**Containment:** Placed on the border of a Component. Connects internal structure to external interfaces.
+**Containment:** Placed on the border of a Component. Connects internal structure to external
+interfaces.
 
 ### Delegation Connector [UML 2.0+]
 
@@ -384,8 +388,8 @@ Dependency with `<<use>>` stereotype. Same style as Dependency; label: `<<use>>`
 
 ## §3 Sequence Diagram
 
-UML 2.5 §17. Models interaction between participants over time — lifelines, messages,
-activation, and combined fragments.
+UML 2.5 §17. Models interaction between participants over time — lifelines, messages, activation,
+and combined fragments.
 
 ### Lifeline [UML 1.x+]
 
@@ -399,11 +403,11 @@ shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1
 
 **Key parameters:**
 
-| Parameter | Value | Purpose |
-|-----------|-------|---------|
-| `size=40` | pixels | Height of the header box |
-| `container=1` | boolean | Activation boxes are children |
-| `portConstraint=eastwest` | — | Messages attach to left/right only |
+| Parameter                 | Value   | Purpose                            |
+| ------------------------- | ------- | ---------------------------------- |
+| `size=40`                 | pixels  | Height of the header box           |
+| `container=1`             | boolean | Activation boxes are children      |
+| `portConstraint=eastwest` | —       | Messages attach to left/right only |
 
 ### Synchronous Message [UML 1.x+]
 
@@ -437,8 +441,8 @@ html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;strokeColor=#475569
 
 ### Create Message [UML 2.0+]
 
-Dashed line with open arrowhead targeting a new lifeline header. Creates a new participant at
-that point in time.
+Dashed line with open arrowhead targeting a new lifeline header. Creates a new participant at that
+point in time.
 
 Uses `text-primary` stroke.
 
@@ -458,8 +462,8 @@ shape=umlDestroy;whiteSpace=wrap;html=1;strokeColor=#DC2626;strokeWidth=2;
 
 ### Activation Box [UML 1.x+]
 
-Thin rectangle (execution specification) showing when a lifeline is active. Width: 10-15 px.
-Must be a child of its lifeline.
+Thin rectangle (execution specification) showing when a lifeline is active. Width: 10-15 px. Must be
+a child of its lifeline.
 
 Uses `surface-device` colors.
 
@@ -486,8 +490,8 @@ line;html=1;strokeWidth=1;strokeColor=#475569;dashed=1;
 
 ### Interaction Use (ref) [UML 2.0+]
 
-Frame referencing another interaction. Label: `ref` in the pentagon tab, interaction name in
-the center.
+Frame referencing another interaction. Label: `ref` in the pentagon tab, interaction name in the
+center.
 
 Uses `surface-muted` fill.
 
@@ -497,8 +501,8 @@ shape=umlFrame;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#475569;font
 
 ### Gate [UML 2.5]
 
-Small filled circle on the frame border representing a message endpoint crossing the
-interaction boundary. Dimensions: 8x8 px.
+Small filled circle on the frame border representing a message endpoint crossing the interaction
+boundary. Dimensions: 8x8 px.
 
 Uses `text-primary` fill and stroke.
 
@@ -626,8 +630,8 @@ ellipse;html=1;aspect=fixed;fillColor=#1E293B;strokeColor=#1E293B;
 
 ## §4 State Machine Diagram
 
-UML 2.5 §14. Models the lifecycle of an entity through states and transitions — guards,
-effects, composite states, and pseudostates.
+UML 2.5 §14. Models the lifecycle of an entity through states and transitions — guards, effects,
+composite states, and pseudostates.
 
 ### Simple State [UML 1.x+]
 
@@ -677,12 +681,13 @@ Uses `surface-muted` fill.
 swimlane;fontStyle=1;align=center;startSize=30;rounded=1;arcSize=10;html=1;whiteSpace=wrap;recursiveResize=0;fillColor=#F8FAFC;strokeColor=#475569;fontFamily=Sans-serif;fontSize=11;fontColor=#1E293B;
 ```
 
-**Containment:** Can contain Simple State, Initial/Final pseudostates, Choice, Junction, Fork/Join, nested Composite States, and transitions.
+**Containment:** Can contain Simple State, Initial/Final pseudostates, Choice, Junction, Fork/Join,
+nested Composite States, and transitions.
 
 ### Submachine State [UML 2.0+]
 
-References another state machine diagram. Same style as Simple State, with a trident icon in
-the label to indicate submachine reference.
+References another state machine diagram. Same style as Simple State, with a trident icon in the
+label to indicate submachine reference.
 
 ```
 rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#475569;fontFamily=Sans-serif;fontSize=10;fontColor=#1E293B;
@@ -700,10 +705,10 @@ Uses `surface-default` fill.
 ellipse;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#475569;fontFamily=Sans-serif;fontSize=10;fontColor=#1E293B;fontStyle=1;
 ```
 
-### Deep History (H*) [UML 1.x+]
+### Deep History (H\*) [UML 1.x+]
 
-Remembers the full sub-state hierarchy. Same shape as Shallow History. Label: `H*`.
-Dimensions: 24x24 px.
+Remembers the full sub-state hierarchy. Same shape as Shallow History. Label: `H*`. Dimensions:
+24x24 px.
 
 ```
 ellipse;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#475569;fontFamily=Sans-serif;fontSize=10;fontColor=#1E293B;fontStyle=1;
@@ -721,8 +726,8 @@ rhombus;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#475569;fontFamily=
 
 ### Junction Pseudostate [UML 1.x+]
 
-Small filled circle merging or splitting transitions at compile time (static branching).
-Dimensions: 12x12 px.
+Small filled circle merging or splitting transitions at compile time (static branching). Dimensions:
+12x12 px.
 
 Uses `text-primary` fill and stroke.
 
@@ -742,8 +747,8 @@ fillColor=#1E293B;strokeColor=#1E293B;
 
 ### Join Bar [UML 1.x+]
 
-Horizontal bar merging concurrent incoming transitions into one outgoing transition.
-Same style as Fork Bar.
+Horizontal bar merging concurrent incoming transitions into one outgoing transition. Same style as
+Fork Bar.
 
 Uses `text-primary` fill and stroke. Geometry: width=120, height=4.
 
@@ -853,8 +858,8 @@ edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;e
 
 ## §5 Package / Class Diagram
 
-UML 2.5 §7, §11.4. Models the structural organization of a system — packages, classes,
-interfaces, enumerations, and their relationships.
+UML 2.5 §7, §11.4. Models the structural organization of a system — packages, classes, interfaces,
+enumerations, and their relationships.
 
 ### Package [UML 1.x+]
 
@@ -914,8 +919,8 @@ text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;r
 
 ### Abstract Class [UML 1.x+]
 
-Same as Class with `fontStyle=3` (bold + italic) on the header. Label format: `ClassName` in
-bold italic, or with `{abstract}` tag.
+Same as Class with `fontStyle=3` (bold + italic) on the header. Label format: `ClassName` in bold
+italic, or with `{abstract}` tag.
 
 ```
 swimlane;fontStyle=3;align=center;startSize=26;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#475569;fontFamily=Sans-serif;fontSize=11;fontColor=#1E293B;
@@ -1109,8 +1114,8 @@ rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#F1F5F9;strokeColor=#47556
 
 ### Decision / Merge [UML 1.x+]
 
-Diamond shape. Decision has one incoming and multiple outgoing edges with guards. Merge has
-multiple incoming and one outgoing edge.
+Diamond shape. Decision has one incoming and multiple outgoing edges with guards. Merge has multiple
+incoming and one outgoing edge.
 
 Uses `surface-default` fill.
 
@@ -1150,8 +1155,8 @@ ellipse;html=1;shape=doubleCircle;fillColor=#1E293B;strokeColor=#1E293B;
 
 ### Flow Final [UML 1.x+]
 
-Circle with X terminating a single flow path (not the entire activity). Dimensions: 24x24 px.
-Label: the X symbol.
+Circle with X terminating a single flow path (not the entire activity). Dimensions: 24x24 px. Label:
+the X symbol.
 
 Uses `surface-default` fill with `text-primary` stroke.
 
@@ -1211,8 +1216,8 @@ rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#475569;dashed=1;das
 
 ### Interruptible Region [UML 2.0+]
 
-Dashed rounded rectangle with a different dash pattern, grouping actions that can be
-interrupted by an exception or event.
+Dashed rounded rectangle with a different dash pattern, grouping actions that can be interrupted by
+an exception or event.
 
 Uses no fill, `surface-default` stroke.
 
@@ -1230,8 +1235,8 @@ edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;e
 
 ### Object Flow [UML 2.0+]
 
-Edge connecting an action to an object node (or vice versa). Same style as control flow but
-carries data.
+Edge connecting an action to an object node (or vice versa). Same style as control flow but carries
+data.
 
 ```
 edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#475569;strokeWidth=1;fontFamily=Sans-serif;fontSize=8;fontColor=#475569;

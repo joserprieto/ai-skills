@@ -35,21 +35,21 @@ digraph brand_flow {
 All palettes generated with the OKHSL color system for perceptual uniformity. Use the EXACT hex
 values below. 11 stops each (50–950).
 
-#### Moss (Primary neutral — text anchor)
+#### Moss (Brand primary — visual identity anchor)
 
-| Scale | Hex       | Usage                                              |
-| ----- | --------- | -------------------------------------------------- |
-| 50    | `#ebf0ec` | Lightest background, hover states                  |
-| 100   | `#d8e0da` | Light backgrounds, cards                           |
-| 200   | `#b4c2b6` | Borders, dividers                                  |
-| 300   | `#92a494` | Placeholder text, subtle                           |
-| 400   | `#738675` | Secondary text, disabled                           |
-| 500   | `#566958` | Medium emphasis, icons                             |
-| 600   | `#3c4d3d` | Strong text                                        |
-| 700   | `#243225` | Dark backgrounds                                   |
-| 800   | `#141a14` | **ANCHOR** — inverse background, primary button bg |
-| 900   | `#020402` | Deepest background                                 |
-| 950   | `#000100` | Near black                                         |
+| Scale | Hex       | Usage                                     |
+| ----- | --------- | ----------------------------------------- |
+| 50    | `#ebf0ec` | Lightest background, hover states         |
+| 100   | `#d8e0da` | Light backgrounds, cards                  |
+| 200   | `#b4c2b6` | Borders, dividers                         |
+| 300   | `#92a494` | Placeholder text, subtle                  |
+| 400   | `#738675` | Secondary text, disabled                  |
+| 500   | `#566958` | **BRAND ANCHOR** — medium emphasis, icons |
+| 600   | `#3c4d3d` | Strong text                               |
+| 700   | `#243225` | Dark backgrounds                          |
+| 800   | `#141a14` | inverse background, primary button bg     |
+| 900   | `#020402` | Deepest background                        |
+| 950   | `#000100` | Near black                                |
 
 **Semantic mappings**:
 
@@ -372,8 +372,8 @@ Accessible 8-color palette for data visualization:
 ### Step 8: Draw.io / Diagrams Convention
 
 For UML diagram shapes and style strings, use the `drawio-uml-shapes` skill. Apply the joserprieto
-color overrides below to its semantic roles. These tokens apply to every draw.io, Mermaid, D2, or SVG
-diagram.
+color overrides below to its semantic roles. These tokens apply to every draw.io, Mermaid, D2, or
+SVG diagram.
 
 **joserprieto semantic role overrides** (maps `drawio-uml-shapes` roles to joserprieto tokens):
 
@@ -399,17 +399,17 @@ diagram.
 
 **joserprieto-specific element categories** (beyond standard semantic roles):
 
-| Element      | Fill                 | Stroke                | Font Color            | Example         |
-| ------------ | -------------------- | --------------------- | --------------------- | --------------- |
-| Deprecated   | `#d8e0da` (moss.100) | `#738675` (moss.400)  | `#738675` (moss.400)  | Unused services |
-| Dark inverse | `#141a14` (moss.800) | `#3d5a3d` (sage.600)  | `#e6eae6`             | Hero nodes      |
+| Element      | Fill                 | Stroke               | Font Color           | Example         |
+| ------------ | -------------------- | -------------------- | -------------------- | --------------- |
+| Deprecated   | `#d8e0da` (moss.100) | `#738675` (moss.400) | `#738675` (moss.400) | Unused services |
+| Dark inverse | `#141a14` (moss.800) | `#3d5a3d` (sage.600) | `#e6eae6`            | Hero nodes      |
 
 **joserprieto boundary conventions** (infrastructure groups — not UML, joserprieto-specific):
 
-| Boundary | Fill                | Stroke                | Font Color            | Example           |
-| -------- | ------------------- | --------------------- | --------------------- | ----------------- |
-| Domain   | `#fafcfa` (bg-page) | `#3d5a3d` (sage.600)  | `#3d5a3d` (sage.600)  | Bounded contexts  |
-| External | `#f2f5f2` (bg-alt)  | `#92a494` (moss.300)  | `#92a494` (moss.300)  | 3rd party systems |
+| Boundary | Fill                | Stroke               | Font Color           | Example           |
+| -------- | ------------------- | -------------------- | -------------------- | ----------------- |
+| Domain   | `#fafcfa` (bg-page) | `#3d5a3d` (sage.600) | `#3d5a3d` (sage.600) | Bounded contexts  |
+| External | `#f2f5f2` (bg-alt)  | `#92a494` (moss.300) | `#92a494` (moss.300) | 3rd party systems |
 
 **Edge conventions** (joserprieto-specific edge semantics):
 
@@ -422,9 +422,9 @@ diagram.
 | Data flow          | `endArrow=open`            | `#3d5a3d` (sage.600)  | 1.5   |
 | Info / annotation  | `endArrow=open;dashed=1`   | `#3a5a7a` (slate.500) | 1     |
 
-**Global font override:** `fontFamily=Inter` on ALL diagram elements. This overrides the `Sans-serif`
-default in `drawio-uml-shapes`. Labels use `fontColor=#141a14` (moss.800) unless a semantic color
-applies.
+**Global font override:** `fontFamily=Inter` on ALL diagram elements. This overrides the
+`Sans-serif` default in `drawio-uml-shapes`. Labels use `fontColor=#141a14` (moss.800) unless a
+semantic color applies.
 
 **Device stroke rule:** ALL deployment targets (device nodes) use `strokeColor=#3d5a3d` (sage.600)
 regardless of status. The fill color communicates status (clay.50 for critical, moss.50 for
@@ -467,18 +467,18 @@ See `references/theme-configurations.md` for copy-paste Mermaid `%%{init: ...}%%
 
 ## Common Mistakes
 
-| Mistake                          | Correct Approach                                           |
-| -------------------------------- | ---------------------------------------------------------- |
-| Using arbitrary greens           | Use `sage.600` (`#3d5a3d`) for brand interactions          |
-| Using arbitrary text colors      | Use `moss.800` (`#141a14`) for primary text                |
-| Using background white `#ffffff` | Use `original.bg` (`#fafcfa`) as page background           |
-| Using RGB instead of hex         | Always reference hex from token tables above               |
-| Mixing warning colors            | Warning primary text = `#936c00` (WCAG AA), bg = `#f2eee6` |
-| Using red for errors             | Use clay.500 (`#8a3a3a`), NOT red                          |
-| Hardcoding spacing values        | Use 8pt grid multiples: 4, 8, 16, 24, 32, 48px             |
-| Using draw.io default fonts      | Always specify `Inter` as font family                      |
-| Random node colors in diagrams   | Follow semantic role overrides table in Step 8             |
-| Using draw.io shapes without skill | Use `drawio-uml-shapes` skill for correct UML shapes      |
-| Using Mermaid default theme      | Always apply theme variables from Step 9                   |
-| Making logo uppercase            | joserprieto is always LOWERCASE                            |
-| Wrong logo letter-spacing        | Must be exactly `0.006em`                                  |
+| Mistake                            | Correct Approach                                           |
+| ---------------------------------- | ---------------------------------------------------------- |
+| Using arbitrary greens             | Use `sage.600` (`#3d5a3d`) for brand interactions          |
+| Using arbitrary text colors        | Use `moss.800` (`#141a14`) for primary text                |
+| Using background white `#ffffff`   | Use `original.bg` (`#fafcfa`) as page background           |
+| Using RGB instead of hex           | Always reference hex from token tables above               |
+| Mixing warning colors              | Warning primary text = `#936c00` (WCAG AA), bg = `#f2eee6` |
+| Using red for errors               | Use clay.500 (`#8a3a3a`), NOT red                          |
+| Hardcoding spacing values          | Use 8pt grid multiples: 4, 8, 16, 24, 32, 48px             |
+| Using draw.io default fonts        | Always specify `Inter` as font family                      |
+| Random node colors in diagrams     | Follow semantic role overrides table in Step 8             |
+| Using draw.io shapes without skill | Use `drawio-uml-shapes` skill for correct UML shapes       |
+| Using Mermaid default theme        | Always apply theme variables from Step 9                   |
+| Making logo uppercase              | joserprieto is always LOWERCASE                            |
+| Wrong logo letter-spacing          | Must be exactly `0.006em`                                  |
