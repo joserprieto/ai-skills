@@ -4,7 +4,7 @@
 /**
  * Configuration for commit-and-tag-version (formerly standard-version).
  *
- * Bump files : .semver, Makefile
+ * Bump files : .semver, Makefile, pyproject.toml (if Python project)
  * Changelog  : CHANGELOG.md  (via Handlebars templates in .changelog-templates/)
  * Repo       : https://github.com/OWNER/PROJECT
  *
@@ -82,6 +82,23 @@ const config = {
         },
       },
     },
+    // ── Python projects: uncomment to bump pyproject.toml ──────────────
+    // IMPORTANT: Also add pyproject.toml to RELEASE_FILES in Makefile!
+    // {
+    //   filename: 'pyproject.toml',
+    //   updater: {
+    //     readVersion(contents) {
+    //       const match = contents.match(/^version\s*=\s*"([^"]+)"/m);
+    //       if (!match) {
+    //         throw new Error('Could not find version in pyproject.toml');
+    //       }
+    //       return match[1];
+    //     },
+    //     writeVersion(contents, version) {
+    //       return contents.replace(/^(version\s*=\s*")[^"]+(")/m, `$1${version}$2`);
+    //     },
+    //   },
+    // },
   ],
 };
 
@@ -98,6 +115,11 @@ module.exports = config;
   Manual control from the Makefile is safer — you see exactly what gets committed and tagged.
 - **Custom Makefile updater** — The `readVersion`/`writeVersion` regex pair bumps `VERSION := X.Y.Z`
   in the Makefile. This keeps the Makefile version in sync without a second source of truth.
-- **Extending for Python projects** — Add extra entries to `bumpFiles` for `pyproject.toml`
-  (`[project] version = "..."`) and `__init__.py` (`__version__ = "..."`), each with a custom
-  `updater` using the same regex pattern.
+- **Extending for Python projects** — Uncomment the `pyproject.toml` entry in `bumpFiles`. The
+  regex uses the `/m` (multiline) flag in BOTH `readVersion` and `writeVersion` — this is critical
+  because `version =` is not at the start of the file. Also add `pyproject.toml` to `RELEASE_FILES`
+  in the Makefile.
+- **Do NOT use `--first-release`** — It skips the version bump entirely (stays at `0.0.0`). For the
+  first release, use `--release-as minor` to bump `0.0.0 → 0.1.0`.
+- **Empty `CHANGELOG.md` for initial commit** — The `header` property in this config defines the
+  CHANGELOG header. If the CHANGELOG file already has a header, it gets duplicated on every release.
