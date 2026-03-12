@@ -7,7 +7,7 @@ description: >-
 license: MIT
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.5.0'
+  version: '0.6.0'
 ---
 
 # Repo Kickstart
@@ -86,6 +86,16 @@ project/
 │   ├── header.hbs
 │   ├── commit.hbs
 │   └── footer.hbs
+├── docs/
+│   └── conventions/           # Project conventions (from scaffold)
+│       ├── build-tools.md
+│       ├── changelog.md
+│       ├── cicd.md
+│       ├── commits.md
+│       ├── dev-workflow.md
+│       ├── releases.md
+│       ├── testing.md
+│       └── versioning.md
 ├── .github/
 │   ├── config/labels.json    # Label definitions for sync
 │   ├── ISSUE_TEMPLATE/
@@ -113,7 +123,7 @@ project/
 ├── .markdownlint-cli2.jsonc    # Markdown lint config + ignores
 ├── .prettierrc
 ├── .prettierignore
-├── .semver                     # Plain-text version (e.g., 0.1.0)
+├── .semver                     # Plain-text version (starts at 0.0.0)
 ├── .versionrc.js               # commit-and-tag-version config
 ├── CHANGELOG.md
 ├── .githooks/
@@ -173,8 +183,34 @@ Create each file by reading the corresponding template below and replacing place
 > _Agent implementation: Use your platform's user interaction mechanism (e.g., AskUserQuestion in
 > Claude Code, input prompts in Gemini CLI, UI dialogs in Cursor/VS Code)._
 
-Note: Only the CHANGELOG.md header is needed. `commit-and-tag-version` will auto-generate entries
-from the first release onward.
+Note: `CHANGELOG.md` MUST be empty (no header). `commit-and-tag-version` generates the header from
+`config.header` in `.versionrc.js`. Having content in the file causes header duplication on every
+release.
+
+### Step 3c: Project Conventions (Scaffold)
+
+Create the `docs/conventions/` directory with the project convention documents. These are generic
+templates that apply to any project using this infrastructure.
+
+Copy each file from the scaffold templates:
+
+| Target file                         | Scaffold template                                                                                                |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `docs/conventions/versioning.md`    | [assets/scaffold/docs/conventions/versioning.md](assets/scaffold/docs/conventions/versioning.md)                 |
+| `docs/conventions/commits.md`       | [assets/scaffold/docs/conventions/commits.md](assets/scaffold/docs/conventions/commits.md)                       |
+| `docs/conventions/changelog.md`     | [assets/scaffold/docs/conventions/changelog.md](assets/scaffold/docs/conventions/changelog.md)                   |
+| `docs/conventions/releases.md`      | [assets/scaffold/docs/conventions/releases.md](assets/scaffold/docs/conventions/releases.md)                     |
+| `docs/conventions/build-tools.md`   | [assets/scaffold/docs/conventions/build-tools.md](assets/scaffold/docs/conventions/build-tools.md)               |
+| `docs/conventions/dev-workflow.md`  | [assets/scaffold/docs/conventions/dev-workflow.md](assets/scaffold/docs/conventions/dev-workflow.md)              |
+| `docs/conventions/cicd.md`          | [assets/scaffold/docs/conventions/cicd.md](assets/scaffold/docs/conventions/cicd.md)                             |
+| `docs/conventions/testing.md`       | [assets/scaffold/docs/conventions/testing.md](assets/scaffold/docs/conventions/testing.md)                       |
+
+After copying, customize:
+
+- **`commits.md`**: Replace example scopes with project-specific scopes
+- **`cicd.md`**: Remove the GitHub Actions section if not using GitHub; add platform-specific
+  section for GitLab CI, Jenkins, etc.
+- **`testing.md`**: Add project-specific test commands and framework details
 
 ### Step 4: Key Configuration Patterns
 
@@ -260,7 +296,7 @@ After creating all files:
 > _Agent implementation: Use your platform's user interaction mechanism (e.g., AskUserQuestion in
 > Claude Code, input prompts in Gemini CLI, UI dialogs in Cursor/VS Code)._
 
-### Step 8: Initial Commit
+### Step 8: Initial Commit + First Release
 
 > **🔄 Human Decision Point**
 >
@@ -269,15 +305,53 @@ After creating all files:
 > _Agent implementation: Use your platform's user interaction mechanism (e.g., AskUserQuestion in
 > Claude Code, input prompts in Gemini CLI, UI dialogs in Cursor/VS Code)._
 
+**IMPORTANT:** The initial commit MUST have all versions at `0.0.0` (`.semver`, `Makefile`, and any
+extra bump files like `pyproject.toml`). The `CHANGELOG.md` MUST be empty (no header — the tool
+generates it from `config.header` in `.versionrc.js`).
+
+#### Step 8a: Initial commit (version 0.0.0)
+
 ```bash
 git add [all files explicitly]
 git commit -m "feat: initial project infrastructure
 
-Repository setup with CI/CD, linting, releases, and documentation.
+Repository setup with CI/CD, linting, releases, and documentation."
+```
 
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+#### Step 8b: First release (0.0.0 → 0.1.0)
 
+Use the release tooling — do NOT create the tag manually:
+
+```bash
+make release/first
+```
+
+This runs `commit-and-tag-version --release-as minor --skip.commit --skip.tag`, which:
+
+1. Bumps `.semver`, `Makefile` (and `pyproject.toml` if configured) from `0.0.0` to `0.1.0`
+2. Generates `CHANGELOG.md` with all commits since the beginning
+3. Creates a `chore(release): v0.1.0` commit
+4. Creates an annotated `v0.1.0` tag
+
+**Do NOT use `--first-release`** — it skips the version bump and stays at `0.0.0`.
+
+#### Step 8c: Enrich the CHANGELOG
+
+The auto-generated CHANGELOG only contains commit subjects. Enrich it with descriptive content
+following [Keep a Changelog](https://keepachangelog.com/) format, then amend:
+
+```bash
+# Edit CHANGELOG.md — add rich descriptions under each section
+git add CHANGELOG.md
+git commit --amend --no-edit
+# Recreate the tag on the amended commit
+git tag -d v0.1.0
 git tag -a v0.1.0 -m "chore(release): v0.1.0"
+```
+
+#### Step 8d: Push
+
+```bash
 git push -u origin main --tags
 ```
 
@@ -304,3 +378,40 @@ covering email obfuscation, pre-commit hooks, history purge, and `.gitignore` pa
 | `.gitkeep` for empty directories       | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks    |
 | Dependabot PRs have no labels          | Labels must pre-exist in the repo; sync `labels.json` first           |
 | CI auto-close doesn't find issues      | Missing `job:*` labels; run labels sync workflow before first CI run  |
+| Content filter blocks file creation    | Use `cp` + `sed` for CoC/Security files — never generate through model |
+| `--first-release` keeps version 0.0.0 | Use `--release-as minor` for first release; `--first-release` skips bump |
+| CHANGELOG header duplicated            | Start with empty `CHANGELOG.md`; `config.header` in `.versionrc.js` adds it |
+| `pyproject.toml` not bumped            | `writeVersion` regex needs `/m` (multiline) flag; `version =` is not at BOF |
+| `RELEASE_FILES` missing bump targets   | Every file in `bumpFiles` must also appear in `RELEASE_FILES` in Makefile |
+| Manual `git tag` instead of `make`     | Always use `make release/*` — manual tags skip CHANGELOG + version bumps |
+
+## Content Filtering — Template Files with Sensitive Language
+
+**CRITICAL**: Some template files contain language that triggers API content filtering (e.g., Code of
+Conduct mentions "harassment", "sexual", "ban"). When AI agents attempt to generate this content, the
+entire output gets blocked — including other legitimate files in the same batch.
+
+### Affected Files
+
+- `CODE_OF_CONDUCT.md` (Contributor Covenant — contains harassment/discrimination language)
+- `SECURITY.md` (may trigger on vulnerability/exploit terminology)
+- Any file with anti-harassment policies or enforcement guidelines
+
+### Required Approach
+
+**NEVER generate these files' content through the model.** Instead, use shell-level copy + substitution:
+
+```bash
+# Copy template and replace placeholders with sed
+sed -e 's/CONTACT_EMAIL/hi [at] example [dot] com/g' \
+    -e 's/PROJECT_NAME/my-project/g' \
+    assets/templates/code-of-conduct.md.tpl > CODE_OF_CONDUCT.md
+```
+
+### For Subagents/Teammates
+
+When dispatching agents to create repo files, explicitly instruct them:
+
+- Use `cp` + `sed` for CoC, Security, and any policy files
+- Never read template content into the model's context and re-emit it
+- Create these files in a SEPARATE step from other files to avoid batch failures

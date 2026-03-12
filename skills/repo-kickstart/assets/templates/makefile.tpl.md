@@ -15,7 +15,7 @@ SHELL := /bin/bash
 
 # Project metadata
 PROJECT_NAME := Project Name
-VERSION := 0.1.0
+VERSION := 0.0.0
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Colors and Formatting
@@ -203,6 +203,8 @@ qa: lint format/check ## Run all quality checks
 # then we create the commit and tag manually. This ensures git hooks run and
 # we control exactly which files are staged.
 
+# IMPORTANT: Keep in sync with bumpFiles in .versionrc.js
+# If you add a bumpFile (e.g., pyproject.toml), add it here too.
 RELEASE_FILES := CHANGELOG.md .semver Makefile
 
 define _release_commit
@@ -244,6 +246,13 @@ release/major: qa ## Create major release (0.1.0 -> 1.0.0)
 	@npx commit-and-tag-version --release-as major --skip.commit --skip.tag
 	$(call _release_commit)
 	$(call print_success,Major release created)
+
+.PHONY: release/first
+release/first: qa ## Create first release (0.0.0 -> 0.1.0)
+	$(call print_header,Creating First Release)
+	@npx commit-and-tag-version --release-as minor --skip.commit --skip.tag
+	$(call _release_commit)
+	$(call print_success,First release v$$(cat .semver) created)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Cleanup
@@ -293,6 +302,16 @@ comment automatically appears in `make help`.
 2. Runs `qa` prerequisite (lint + format check — if anything fails, release aborts)
 3. Runs `commit-and-tag-version --skip.commit --skip.tag` to bump `.semver`, `Makefile`, and
    generate `CHANGELOG.md`
-4. Stages only `RELEASE_FILES` (CHANGELOG.md, .semver, Makefile)
+4. Stages only `RELEASE_FILES` (CHANGELOG.md, .semver, Makefile + any extra bump files)
 5. Creates a `chore(release): vX.Y.Z` commit
 6. Creates an annotated `vX.Y.Z` tag
+
+**First release flow:**
+
+1. Initial commit has all versions at `0.0.0` and an empty `CHANGELOG.md`
+2. `make release/first` runs `commit-and-tag-version --release-as minor` (bumps `0.0.0 → 0.1.0`)
+3. The tool generates the CHANGELOG from all commits since the beginning
+4. After the release, enrich the CHANGELOG with Keep a Changelog content, then `git commit --amend`
+
+**IMPORTANT:** Do NOT use `--first-release` flag — it skips the version bump entirely and keeps
+`0.0.0`. Instead, use `--release-as minor` to get `0.1.0`.

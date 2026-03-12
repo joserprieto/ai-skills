@@ -40,10 +40,10 @@ make release
   │       ├── Reads current version from .semver
   │       ├── Scans git log for conventional commits since last tag
   │       ├── Determines bump type (patch/minor/major)
-  │       ├── Writes new version to .semver + Makefile (via bumpFiles)
+  │       ├── Writes new version to .semver + Makefile + extras (via bumpFiles)
   │       └── Generates CHANGELOG.md entry (via .changelog-templates/)
   │
-  ├── 3. git add CHANGELOG.md .semver Makefile
+  ├── 3. git add RELEASE_FILES (CHANGELOG.md .semver Makefile + extras)
   │
   ├── 4. git commit -m "chore(release): vX.Y.Z"
   │
@@ -60,6 +60,21 @@ internally via Node's `child_process`. This has three problems:
 
 By skipping the commit and tag, the Makefile controls the entire git operation. You see exactly what
 gets committed.
+
+#### First Release Flow
+
+The first release follows a specific flow because `commit-and-tag-version` needs special handling:
+
+1. **Initial commit** has all versions at `0.0.0` and an empty `CHANGELOG.md`
+2. Run `make release/first` (internally uses `--release-as minor`)
+3. This bumps `0.0.0 → 0.1.0` across all bump files and generates the CHANGELOG
+4. Enrich the CHANGELOG with descriptive content (Keep a Changelog format)
+5. Amend the release commit and recreate the tag
+
+**Do NOT use `--first-release`** — it skips the version bump and keeps `0.0.0`.
+
+**Do NOT put a header in `CHANGELOG.md`** — the `config.header` property in `.versionrc.js` defines
+the header, and it gets prepended on every release. A pre-existing header causes duplication.
 
 **Preview without side effects:**
 
