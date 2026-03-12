@@ -61,8 +61,8 @@ Create a Pull Request following the PR template.
 
 ### 5. After Merge
 
-Releases are created from `main` by maintainers using `make release/*`.
-See [releases.md](./releases.md).
+Releases are created from `main` by maintainers using `make release/*`. See
+[releases.md](./releases.md).
 
 ## Git Hooks
 
@@ -90,12 +90,12 @@ inside the empty directory — **never** `.gitkeep` or `.empty`:
 
 **Why `.gitignore` over `.gitkeep`/`.empty`:**
 
-- `.gitignore` is a **standard git mechanism**; `.gitkeep`/`.empty` are informal conventions with
-  no special meaning to git
+- `.gitignore` is a **standard git mechanism**; `.gitkeep`/`.empty` are informal conventions with no
+  special meaning to git
 - When the directory later needs to track content, you **modify** the `.gitignore` rules — a
   natural, incremental change
-- With `.gitkeep`, you must remember to delete it when adding real files, and stale `.gitkeep`
-  files accumulate silently across the project
+- With `.gitkeep`, you must remember to delete it when adding real files, and stale `.gitkeep` files
+  accumulate silently across the project
 - `.gitignore` also **protects against accidental commits** — sensitive files dropped into the
   directory won't be staged
 

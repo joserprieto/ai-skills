@@ -15,20 +15,20 @@ for commit messages.
 
 ## Types
 
-| Type        | Description                   | CHANGELOG Section |
-|-------------|-------------------------------|-------------------|
-| `feat`      | New feature                   | Features          |
-| `fix`       | Bug fix                       | Bug Fixes         |
-| `refactor`  | Code refactoring              | Code Refactoring  |
-| `perf`      | Performance improvement       | Performance       |
-| `docs`      | Documentation only            | Documentation     |
-| `style`     | Code style (formatting, etc.) | (hidden)          |
-| `test`      | Adding/updating tests         | (hidden)          |
-| `chore`     | Maintenance tasks             | (hidden)          |
-| `ci`        | CI/CD changes                 | (hidden)          |
-| `build`     | Build system changes          | Build System      |
-| `revert`    | Revert a commit               | Reverts           |
-| `security`  | Security fixes                | Security          |
+| Type       | Description                   | CHANGELOG Section |
+| ---------- | ----------------------------- | ----------------- |
+| `feat`     | New feature                   | Features          |
+| `fix`      | Bug fix                       | Bug Fixes         |
+| `refactor` | Code refactoring              | Code Refactoring  |
+| `perf`     | Performance improvement       | Performance       |
+| `docs`     | Documentation only            | Documentation     |
+| `style`    | Code style (formatting, etc.) | (hidden)          |
+| `test`     | Adding/updating tests         | (hidden)          |
+| `chore`    | Maintenance tasks             | (hidden)          |
+| `ci`       | CI/CD changes                 | (hidden)          |
+| `build`    | Build system changes          | Build System      |
+| `revert`   | Revert a commit               | Reverts           |
+| `security` | Security fixes                | Security          |
 
 ## Scopes
 
