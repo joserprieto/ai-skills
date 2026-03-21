@@ -1,0 +1,155 @@
+{
+  "skill_name": "expert-panel",
+  "evals": [
+    {
+      "id": 1,
+      "name": "security-assessment-full",
+      "prompt": "Evaluate an IR report with a full security panel (15 experts: DFIR + SEC + QA)",
+      "expected_output": "15 individual evaluation files + 1 consolidated report + 1 evaluation manifest",
+      "files": [],
+      "assertions": [
+        {
+          "name": "manifest_created",
+          "description": "An evaluation-manifest.md file exists in the output directory",
+          "type": "file_exists"
+        },
+        {
+          "name": "correct_evaluator_count",
+          "description": "Exactly 15 individual evaluation files exist (DFIR-1 through DFIR-5, SEC-1 through SEC-5, QA-1 through QA-5)",
+          "type": "file_count",
+          "expected": 15
+        },
+        {
+          "name": "consolidated_report_exists",
+          "description": "A consolidated-panel-report.md file exists",
+          "type": "file_exists"
+        },
+        {
+          "name": "evaluations_have_scores",
+          "description": "Each evaluation file contains 'Score:' lines with numeric values for every rubric criterion",
+          "type": "content_check"
+        },
+        {
+          "name": "evaluations_have_justifications",
+          "description": "Each score has at least 2 sentences of justification below it",
+          "type": "content_check"
+        },
+        {
+          "name": "evaluations_end_marker",
+          "description": "Each evaluation file ends with _END OF EVALUATION_ (not truncated)",
+          "type": "content_check"
+        },
+        {
+          "name": "consolidated_has_score_table",
+          "description": "Consolidated report contains a score summary table with all 15 evaluators",
+          "type": "content_check"
+        },
+        {
+          "name": "consolidated_has_consensus",
+          "description": "Consolidated report has a consensus findings section",
+          "type": "content_check"
+        },
+        {
+          "name": "consolidated_has_dissent",
+          "description": "Consolidated report has a dissenting opinions section",
+          "type": "content_check"
+        },
+        {
+          "name": "manifest_all_completed",
+          "description": "Manifest shows all 15 evaluators with status completed and consolidation completed",
+          "type": "content_check"
+        },
+        {
+          "name": "one_agent_per_evaluator",
+          "description": "Each evaluation file shows a distinct specialist perspective (not copy-paste variations)",
+          "type": "qualitative"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "architecture-review-minimal",
+      "prompt": "Evaluate infrastructure remediation recommendations with a minimal panel (5 experts)",
+      "expected_output": "5 individual evaluation files + 1 consolidated report + 1 evaluation manifest",
+      "files": [],
+      "assertions": [
+        {
+          "name": "manifest_created",
+          "description": "An evaluation-manifest.md exists in the output directory",
+          "type": "file_exists"
+        },
+        {
+          "name": "correct_evaluator_count",
+          "description": "Exactly 5 individual evaluation files exist",
+          "type": "file_count",
+          "expected": 5
+        },
+        {
+          "name": "consolidated_report_exists",
+          "description": "A consolidated-panel-report.md file exists",
+          "type": "file_exists"
+        },
+        {
+          "name": "panel_matches_template",
+          "description": "Evaluator IDs and specialisations match the infrastructure-review panel template (REL, SEC, OPS prefixes)",
+          "type": "content_check"
+        },
+        {
+          "name": "evaluations_have_scores",
+          "description": "Each evaluation file contains scores for every rubric criterion",
+          "type": "content_check"
+        },
+        {
+          "name": "evaluations_end_marker",
+          "description": "Each evaluation file ends with _END OF EVALUATION_",
+          "type": "content_check"
+        },
+        {
+          "name": "manifest_all_completed",
+          "description": "Manifest shows all 5 evaluators completed and consolidation completed",
+          "type": "content_check"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "resumability",
+      "prompt": "Continue an interrupted evaluation from manifest (3/5 done, complete remaining 2 + consolidate)",
+      "expected_output": "Only 2 new evaluator files created (OPS-1, OPS-2). Consolidated report includes all 5. Manifest updated.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "no_overwrite_completed",
+          "description": "REL-1.md, SEC-1.md, SEC-2.md were NOT overwritten (check timestamps or content unchanged)",
+          "type": "content_check"
+        },
+        {
+          "name": "pending_evaluators_created",
+          "description": "OPS-1.md and OPS-2.md now exist in the output directory",
+          "type": "file_exists"
+        },
+        {
+          "name": "only_two_new_files",
+          "description": "Only 2 new evaluation files were created, not 5",
+          "type": "file_count",
+          "expected": 2
+        },
+        {
+          "name": "consolidated_includes_all_five",
+          "description": "Consolidated report references and aggregates scores from all 5 evaluators",
+          "type": "content_check"
+        },
+        {
+          "name": "manifest_updated",
+          "description": "Manifest shows all 5 evaluators as completed and consolidation as completed",
+          "type": "content_check"
+        },
+        {
+          "name": "execution_log_updated",
+          "description": "Manifest execution log has new entries for the resumed evaluation",
+          "type": "content_check"
+        }
+      ]
+    }
+  ]
+}
