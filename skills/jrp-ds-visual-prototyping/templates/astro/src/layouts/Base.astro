@@ -1,0 +1,108 @@
+---
+/**
+ * Base layout for DS prototyping.
+ * Loads tokens, styles, sprite, and fonts from symlinked DS assets.
+ */
+interface Props {
+  title?: string;
+}
+
+const { title = 'JRP DS Prototype' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+
+    <!-- Design System: tokens (custom properties) -->
+    <link rel="stylesheet" href="/ds/tokens.css" />
+
+    <!-- Design System: component styles -->
+    <link rel="stylesheet" href="/ds/main.css" />
+
+    <!-- Font faces -->
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('/ds/fonts/inter/inter-400.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url('/ds/fonts/inter/inter-500.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url('/ds/fonts/inter/inter-600.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url('/ds/fonts/inter/inter-700.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('/ds/fonts/jetbrains-mono/jetbrains-mono-400.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Titillium Web';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url('/ds/fonts/titillium-web/titillium-web-700.woff2') format('woff2');
+      }
+    </style>
+
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--jrp-ds-color-background-page, #fafcfa);
+        color: var(--jrp-ds-color-text-primary, #141a14);
+        font-family: var(--jrp-ds-font-family-body, 'Inter', system-ui, sans-serif);
+        font-size: var(--jrp-ds-font-size-base, 1.125rem);
+        line-height: var(--jrp-ds-line-height-normal, 1.5);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Tabler sprite (inlined for Astro SSG) -->
+    <div id="sprite-container" style="display:none">
+      <!-- Sprite loaded by client script below -->
+    </div>
+
+    <slot />
+
+    <script>
+      fetch('/ds/tabler-sprite.svg')
+        .then(function(r) { return r.text(); })
+        .then(function(svg) {
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(svg, 'image/svg+xml');
+          var svgEl = doc.documentElement;
+          document.getElementById('sprite-container')?.appendChild(
+            document.importNode(svgEl, true)
+          );
+        })
+        .catch(function() {
+          console.warn('Sprite not loaded — icons will not render');
+        });
+    </script>
+  </body>
+</html>

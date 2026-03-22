@@ -1,0 +1,56 @@
+---
+/**
+ * Prototype entry point.
+ *
+ * Replace this page with your prototype.
+ * All jrp-ds-* classes and --jrp-ds-* tokens are available.
+ *
+ * To use real DS Astro components, import from the symlinked path:
+ *   import Card from '../../ds-components/atoms/Card.astro';
+ *
+ * Or use raw HTML with DS classes (works the same):
+ *   <div class="jrp-ds-card" data-variant="elevated">...</div>
+ */
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="JRP DS Prototype">
+  <main style="padding: var(--jrp-ds-spacing-8);">
+    <h1 style="font-family: var(--jrp-ds-font-family-brand); color: var(--jrp-ds-color-brand-primary); margin-bottom: var(--jrp-ds-spacing-4);">
+      joserprieto DS Prototype
+    </h1>
+
+    <p style="margin-bottom: var(--jrp-ds-spacing-6);">
+      Tokens, styles, sprite, and fonts are loaded. Start prototyping below.
+    </p>
+
+    <!-- Example: DS Chip component (raw HTML) -->
+    <div style="display: flex; gap: var(--jrp-ds-spacing-2); flex-wrap: wrap;">
+      <span class="jrp-ds-chip" data-variant="default">
+        <span class="jrp-ds-chip__label">Default</span>
+      </span>
+      <span class="jrp-ds-chip" data-variant="primary">
+        <span class="jrp-ds-chip__label">Primary</span>
+      </span>
+      <span class="jrp-ds-chip" data-variant="success">
+        <span class="jrp-ds-chip__label">Success</span>
+      </span>
+      <span class="jrp-ds-chip" data-variant="warning">
+        <span class="jrp-ds-chip__label">Warning</span>
+      </span>
+      <span class="jrp-ds-chip" data-variant="error">
+        <span class="jrp-ds-chip__label">Error</span>
+      </span>
+    </div>
+
+    <!-- Example: Tabler icon from sprite -->
+    <div style="margin-top: var(--jrp-ds-spacing-6);">
+      <svg width="24" height="24" style="color: var(--jrp-ds-color-brand-primary);">
+        <use href="#tabler-heart" />
+      </svg>
+      <span style="margin-left: var(--jrp-ds-spacing-2); vertical-align: super;">
+        Icon from sprite
+      </span>
+    </div>
+  </main>
+</Base>

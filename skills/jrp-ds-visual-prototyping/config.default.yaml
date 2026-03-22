@@ -1,0 +1,27 @@
+# Default DS paths — joserprieto personal setup
+# Override with config.local.yaml (gitignored)
+
+ds:
+  # Root of the jrp-ui monorepo (contains packages/ and node_modules/)
+  root: ~/Projects/joserprieto/personal-site/src/packages/jrp-ui
+
+  # Compiled CSS tokens (custom properties)
+  tokens: packages/design-system/tokens/dist/tokens.css
+
+  # Compiled DS stylesheet (all component styles)
+  styles: packages/design-system/styles/dist/main.css
+
+  # Tabler icons SVG sprite (pnpm hoisted path)
+  # Note: pnpm uses nested node_modules — this glob finds the actual file
+  sprite: node_modules/.pnpm/@tabler+icons-sprite@*/node_modules/@tabler/icons-sprite/dist/tabler-sprite.svg
+
+  # Web font files (woff2) — Inter, JetBrains Mono, Titillium Web
+  fonts: packages/design-system/assets/fonts
+
+  # Astro components source (only used in Astro mode)
+  components: packages/astro-components/src
+
+# Where to create the mini-app
+# {timestamp} is replaced with Unix epoch seconds
+# Set to a project path for persistence (e.g., .superpowers/proto/)
+output: /tmp/jrp-proto-{timestamp}

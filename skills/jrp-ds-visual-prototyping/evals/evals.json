@@ -1,0 +1,26 @@
+{
+  "skill_name": "jrp-ds-visual-prototyping",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "quiero prototipar rápidamente un layout de cards para el CareerAssetItem, probando las variantes pill, row y card con los colores de categoría del DS. Necesito interactividad para el toggle entre modos",
+      "expected_output": "A React mini-app scaffolded with DS tokens/styles, containing a component that renders CareerAssetItem in pill, row, and card modes with category color tints, and a toggle to switch between them. Dev server running.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "prompt": "monta una mini app con Astro para probar cómo se ven los Disclosure inline dentro de párrafos, y un par de chips con las variantes outlined",
+      "expected_output": "An Astro mini-app scaffolded with DS assets, containing a page with Disclosure components in inline variant inside paragraphs, plus Chip components with data-outlined attribute. Uses real DS classes.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 3,
+      "prompt": "necesito montar un prototipo rápido de una landing page que use los tokens del design system — tipografía, colores, spacing. Algo sencillo con un hero, unas cards y un footer",
+      "expected_output": "A mini-app (React or Astro) with a landing page using DS tokens for typography, colors, and spacing. Contains a hero section, card grid, and footer. All values use var(--jrp-ds-*) tokens, not hardcoded.",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}
