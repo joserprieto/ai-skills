@@ -128,6 +128,43 @@ All third-party GitHub Actions MUST be pinned to commit SHAs, not tags:
 7. Add a `job:<job-name>` label to `.github/config/labels.json`
 8. Run the labels sync workflow
 
+### Optional: GitHub Release from Tags (`release.yml`)
+
+Automatically creates a GitHub Release when a version tag (`v*`) is pushed. The workflow extracts
+the matching section from `CHANGELOG.md` and uses it as release notes.
+
+**Flow:**
+
+```
+make release/patch → git push --tags → release.yml triggers → GitHub Release created
+```
+
+**Configuration:** No configuration needed beyond the workflow file. Uses `gh release create` with
+`--verify-tag` to prevent accidental releases.
+
+**When to enable:** Always — it provides a Releases page with downloadable source archives and
+formatted changelogs at zero cost. There is no downside.
+
+### Optional: Stale Issues and PRs (`stale.yml`)
+
+Automatically labels and closes issues/PRs that have had no activity for a configurable period. Runs
+weekly (Monday mornings UTC) via schedule.
+
+**Timing defaults:**
+
+| Item          | Mark stale after | Close after               |
+| ------------- | ---------------- | ------------------------- |
+| Issues        | 60 days inactive | 14 days after stale label |
+| Pull Requests | 30 days inactive | 7 days after stale label  |
+
+**Exempt labels:** Items with `pinned`, `security`, or `ci-failure` labels are never auto-closed.
+Dependabot PRs are exempt via the `dependencies` label.
+
+**When to enable:** Public repos with external contributors, or any repo where issues/PRs accumulate
+without resolution. Skip for private single-contributor repos.
+
+**Manual trigger:** Run `gh workflow run stale.yml` for initial cleanup after enabling.
+
 <!-- END GITHUB ACTIONS SPECIFICS -->
 
 ## Related

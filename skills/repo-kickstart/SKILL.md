@@ -7,7 +7,7 @@ description: >-
 license: MIT
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.6.0'
+  version: '0.7.1'
 ---
 
 # Repo Kickstart
@@ -265,7 +265,16 @@ To add/remove CI jobs, follow this pattern:
 
 > **🔄 Human Decision Point**
 >
-> Present CI/CD options to the user and confirm which optional workflows to include.
+> Present CI/CD options to the user and confirm which optional workflows to include:
+>
+> - **`release.yml`** (Recommended: always) — Creates GitHub Releases from version tags. Zero cost,
+>   no downside. Include unless the user explicitly opts out.
+> - **`stale.yml`** (Recommended: public/team repos only) — Auto-closes inactive issues/PRs. Skip
+>   for private single-contributor repos.
+>
+> Use the decision table in [assets/ci/optional-workflows.md](assets/ci/optional-workflows.md) to
+> guide the recommendation. If including `stale.yml`, ensure `stale`, `pinned`, and `security`
+> labels are present in `labels.json` (they are included in the base template).
 >
 > _Agent implementation: Use your platform's user interaction mechanism (e.g., AskUserQuestion in
 > Claude Code, input prompts in Gemini CLI, UI dialogs in Cursor/VS Code)._

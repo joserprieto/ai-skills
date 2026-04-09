@@ -2,6 +2,26 @@
 
 These workflows are not required for the base setup but are recommended for mature projects.
 
+##### When to include each workflow
+
+| Workflow      | Include when                                                                                                      | Skip when                                                     |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `release.yml` | Any project that uses `make release` — provides a Releases page with notes and downloadable archives at zero cost | Never — there is no downside to including it                  |
+| `stale.yml`   | Public repos with external contributors, or any repo where issues/PRs accumulate without resolution               | Private repos with a single contributor — you are the backlog |
+
+**Recommendation:** Always include `release.yml`. Include `stale.yml` only for public/team repos.
+
+##### Labels prerequisite
+
+Both optional workflows depend on labels defined in `.github/config/labels.json`:
+
+- **`release.yml`**: No additional labels required (uses tags, not labels)
+- **`stale.yml`**: Requires `stale`, `pinned`, and `security` labels. The `pinned` and `security`
+  labels are used as exemptions — issues with these labels are never auto-closed.
+
+These labels are included in the base `labels.json` (see [labels.md](./labels.md)). Ensure the
+labels sync workflow runs before stale.yml's first scheduled execution.
+
 ##### GitHub Release from Tags — `.github/workflows/release.yml`
 
 Automatically creates a GitHub Release with auto-generated notes when you push a version tag (e.g.,

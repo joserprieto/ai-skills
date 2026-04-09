@@ -33,12 +33,27 @@ ignored — PRs/issues are created without labels, and search-by-label queries r
   },
   { "name": "good first issue", "color": "7057ff", "description": "Good for newcomers" },
   { "name": "question", "color": "d876e3", "description": "Further information is requested" },
-  { "name": "dependencies", "color": "0366d6", "description": "Dependency updates" }
+  { "name": "dependencies", "color": "0366d6", "description": "Dependency updates" },
+  {
+    "name": "stale",
+    "color": "ededed",
+    "description": "No recent activity — scheduled for auto-close"
+  },
+  { "name": "pinned", "color": "006b75", "description": "Exempt from stale auto-close" },
+  {
+    "name": "security",
+    "color": "d73a4a",
+    "description": "Security-related issue — exempt from stale auto-close"
+  }
 ]
 ```
 
 Adapt the `job:*` labels to match your CI job names. The `dependencies` label is required for
 dependabot PRs (see [dependabot.md](../ci/dependabot.md)).
+
+The `stale`, `pinned`, and `security` labels are required by the optional `stale.yml` workflow (see
+[optional-workflows.md](../ci/optional-workflows.md)). Include them even if not using stale.yml yet
+— they are useful for manual triaging.
 
 ##### `.github/workflows/labels.yml`
 

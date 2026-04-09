@@ -1,6 +1,6 @@
 # ── Node.js ──────────────────────────────────────────────────────────
 node_modules/
-package-lock.json
+# IMPORTANT: package-lock.json is committed — required by `npm ci` in CI pipeline
 
 # ── Build ────────────────────────────────────────────────────────────
 dist/
