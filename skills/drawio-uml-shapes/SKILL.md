@@ -7,7 +7,7 @@ description: >-
   reference", or "UML notation in draw.io".
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.4.0'
+  version: '0.5.0'
 ---
 
 # Draw.io UML Shape Reference
@@ -308,6 +308,27 @@ All edges should use orthogonal routing unless there is a specific reason not to
 edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;
 ```
 
+### Edge crossing prevention (MANDATORY)
+
+Edges MUST NOT visually intersect each other. Apply these strategies in order:
+
+1. **Jump style on crossing edges:** Add `jumpStyle=arc;jumpSize=8;` to edges that must cross
+   another. This renders a small arc where edges intersect, making the diagram readable.
+2. **Layout order matters:** Place related shapes near each other to minimize edge lengths. Edges
+   between adjacent elements rarely cross.
+3. **Port positioning:** Use `exitX`, `exitY`, `entryX`, `entryY` to control which side of a shape
+   an edge connects to. Distribute connection points to avoid bunching.
+4. **Waypoints:** Add explicit waypoints (`Array<mxPoint>` in geometry) to route edges around
+   obstacles when automatic routing fails.
+
+```
+# Edge with jump arcs for crossings:
+edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;jumpStyle=arc;jumpSize=8;
+```
+
+**Rule of thumb:** If more than 2 edges cross at the same point, reorganize the layout. Edge jumps
+are a fallback, not a substitute for good spatial arrangement.
+
 ### Edge types table
 
 | Type                 | endArrow | endFill | dashed | UML Meaning        |
@@ -391,7 +412,10 @@ Before considering a diagram complete, verify the following.
 
 - [ ] Parent-child relationships match UML containment rules
 - [ ] Child geometry is relative to parent (NOT absolute)
-- [ ] Container shapes have `recursiveResize=0` or `container=1` as appropriate
+- [ ] **ALL containers/groupings MUST have `container=1`** in the style string
+- [ ] **ALL containers MUST have `collapsible=0`** — never allow collapsing in UML diagrams
+- [ ] **ALL containers MUST have `recursiveResize=0`** — children must NOT auto-resize with parent
+- [ ] Combined: every container style includes `container=1;collapsible=0;recursiveResize=0;`
 
 ### Colors
 
@@ -410,6 +434,8 @@ Before considering a diagram complete, verify the following.
 - [ ] All edges have `edgeStyle=orthogonalEdgeStyle` (unless justified)
 - [ ] Arrow types match UML semantics (see Common Elements)
 - [ ] Labels positioned consistently
+- [ ] **No unresolved edge crossings** — use `jumpStyle=arc;jumpSize=8;` where edges must cross
+- [ ] **Minimize edge crossings** through spatial arrangement before resorting to jumps
 
 ### Page
 
@@ -427,6 +453,9 @@ Before considering a diagram complete, verify the following.
 | Hardcoding brand colors in style strings    | Use semantic role defaults; brand skill overrides             |
 | Absolute geometry for nested cells          | Child geometry is relative to parent                          |
 | Missing `recursiveResize=0` on containers   | Children auto-resize unexpectedly                             |
+| Missing `container=1` on grouping shapes    | Children not recognized as nested — breaks move/select        |
+| Missing `collapsible=0` on UML containers   | User can accidentally collapse aggregate contents             |
+| Edges crossing without jump arcs            | Add `jumpStyle=arc;jumpSize=8;` to crossing edges             |
 | Using `shape=ellipse` for final state       | Use `shape=doubleCircle` for bullseye                         |
 | Omitting `container=1` on lifelines         | Activation boxes won't nest correctly                         |
 | Using filled arrow for async messages       | Async = open arrow (`endFill=0`), sync = filled (`endFill=1`) |
