@@ -7,7 +7,7 @@ description: >-
   reference", or "UML notation in draw.io".
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.5.0'
+  version: '0.5.1'
 ---
 
 # Draw.io UML Shape Reference
@@ -436,6 +436,9 @@ Before considering a diagram complete, verify the following.
 - [ ] Labels positioned consistently
 - [ ] **No unresolved edge crossings** — use `jumpStyle=arc;jumpSize=8;` where edges must cross
 - [ ] **Minimize edge crossings** through spatial arrangement before resorting to jumps
+- [ ] **CRITICAL: every `edge="1"` cell MUST have a `<mxGeometry relative="1" as="geometry" />`
+      child** — even if empty. Self-closing edges (`<mxCell .../>`) cause draw.io to open the file
+      with the viewport stuck in an empty corner ("infinite scroll" bug). See Common Mistakes.
 
 ### Page
 
@@ -444,23 +447,24 @@ Before considering a diagram complete, verify the following.
 
 ## Common mistakes
 
-| Mistake                                     | Fix                                                           |
-| ------------------------------------------- | ------------------------------------------------------------- |
-| Using `shape=mxgraph.uml.node` for Device   | Use `shape=cube;direction=south;size=10`                      |
-| Using `shape=cube` for ExecutionEnvironment | Use `shape=mxgraph.uml.component`                             |
-| Omitting `edgeStyle=orthogonalEdgeStyle`    | Always set edgeStyle — bare edges cross shapes                |
-| Using `shape=mxgraph.uml25.component`       | Use `shape=mxgraph.uml.component` (more reliable)             |
-| Hardcoding brand colors in style strings    | Use semantic role defaults; brand skill overrides             |
-| Absolute geometry for nested cells          | Child geometry is relative to parent                          |
-| Missing `recursiveResize=0` on containers   | Children auto-resize unexpectedly                             |
-| Missing `container=1` on grouping shapes    | Children not recognized as nested — breaks move/select        |
-| Missing `collapsible=0` on UML containers   | User can accidentally collapse aggregate contents             |
-| Edges crossing without jump arcs            | Add `jumpStyle=arc;jumpSize=8;` to crossing edges             |
-| Using `shape=ellipse` for final state       | Use `shape=doubleCircle` for bullseye                         |
-| Omitting `container=1` on lifelines         | Activation boxes won't nest correctly                         |
-| Using filled arrow for async messages       | Async = open arrow (`endFill=0`), sync = filled (`endFill=1`) |
-| Missing `dashed=1` on reply messages        | Reply messages are ALWAYS dashed                              |
-| Confusing aggregation and composition       | Aggregation = hollow diamond, Composition = filled diamond    |
+| Mistake                                          | Fix                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Using `shape=mxgraph.uml.node` for Device        | Use `shape=cube;direction=south;size=10`                                                                                                                                                                                                                                                                                                                       |
+| Using `shape=cube` for ExecutionEnvironment      | Use `shape=mxgraph.uml.component`                                                                                                                                                                                                                                                                                                                              |
+| Omitting `edgeStyle=orthogonalEdgeStyle`         | Always set edgeStyle — bare edges cross shapes                                                                                                                                                                                                                                                                                                                 |
+| Using `shape=mxgraph.uml25.component`            | Use `shape=mxgraph.uml.component` (more reliable)                                                                                                                                                                                                                                                                                                              |
+| Hardcoding brand colors in style strings         | Use semantic role defaults; brand skill overrides                                                                                                                                                                                                                                                                                                              |
+| Absolute geometry for nested cells               | Child geometry is relative to parent                                                                                                                                                                                                                                                                                                                           |
+| Missing `recursiveResize=0` on containers        | Children auto-resize unexpectedly                                                                                                                                                                                                                                                                                                                              |
+| Missing `container=1` on grouping shapes         | Children not recognized as nested — breaks move/select                                                                                                                                                                                                                                                                                                         |
+| Missing `collapsible=0` on UML containers        | User can accidentally collapse aggregate contents                                                                                                                                                                                                                                                                                                              |
+| **Self-closing edges (no `<mxGeometry>` child)** | **Add `<mxGeometry relative="1" as="geometry" />` child to EVERY edge.** Self-closing edges (`<mxCell ... edge="1" ... />`) cause the "infinite scroll in corner" bug — draw.io opens the file with the viewport in an empty area far from the content. The edge must look like: `<mxCell ... edge="1" ...><mxGeometry relative="1" as="geometry" /></mxCell>` |
+| Edges crossing without jump arcs                 | Add `jumpStyle=arc;jumpSize=8;` to crossing edges                                                                                                                                                                                                                                                                                                              |
+| Using `shape=ellipse` for final state            | Use `shape=doubleCircle` for bullseye                                                                                                                                                                                                                                                                                                                          |
+| Omitting `container=1` on lifelines              | Activation boxes won't nest correctly                                                                                                                                                                                                                                                                                                                          |
+| Using filled arrow for async messages            | Async = open arrow (`endFill=0`), sync = filled (`endFill=1`)                                                                                                                                                                                                                                                                                                  |
+| Missing `dashed=1` on reply messages             | Reply messages are ALWAYS dashed                                                                                                                                                                                                                                                                                                                               |
+| Confusing aggregation and composition            | Aggregation = hollow diamond, Composition = filled diamond                                                                                                                                                                                                                                                                                                     |
 
 ## Gotchas
 
