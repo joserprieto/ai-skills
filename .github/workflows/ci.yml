@@ -86,6 +86,11 @@ jobs:
           chmod +x .github/scripts/ci/validate-cross-refs.sh
           .github/scripts/ci/validate-cross-refs.sh
 
+      - name: Smoke-check make targets in skill examples
+        run: |
+          chmod +x .github/scripts/ci/smoke-check-make-targets.sh
+          .github/scripts/ci/smoke-check-make-targets.sh
+
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # Format Check
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

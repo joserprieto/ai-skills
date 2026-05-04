@@ -255,6 +255,27 @@ release/first: qa ## Create first release (0.0.0 -> 0.1.0)
 	$(call print_success,First release v$$(cat .semver) created)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Lifecycle (canonical placeholders — adapt to your stack)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# These targets are reserved canonical names. Each project provides its own
+# implementation by replacing the placeholder body with a call to a script
+# under scripts/. See docs/conventions/dev-workflow.md and
+# docs/conventions/testing.md for the patterns.
+
+.PHONY: start
+start: ## Start dev service (configure for your stack)
+	@echo "$(YELLOW)$(BOLD)start$(RESET) is not configured for this project yet."
+	@echo "Edit the Makefile to call ./scripts/serve or your equivalent."
+	@exit 1
+
+.PHONY: test
+test: ## Run test suite (configure for your stack)
+	@echo "$(YELLOW)$(BOLD)test$(RESET) is not configured for this project yet."
+	@echo "Edit the Makefile to call ./scripts/test or your equivalent."
+	@exit 1
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Cleanup
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

@@ -141,7 +141,7 @@ install: ## Install project dependencies and configure git hooks
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 .PHONY: lint
-lint: lint/md lint/shell lint/skills lint/cross-refs ## Run all linters
+lint: lint/md lint/shell lint/skills lint/cross-refs lint/skill-examples ## Run all linters
 	$(call print_success,All linters passed)
 
 .PHONY: lint/fix
@@ -189,6 +189,12 @@ lint/cross-refs: ## Verify internal links in skills point to existing files
 	$(call print_header,Validating Cross-Refs)
 	@.github/scripts/ci/validate-cross-refs.sh
 	$(call print_success,Cross-refs valid)
+
+.PHONY: lint/skill-examples
+lint/skill-examples: ## Verify `make <target>` references in skill examples resolve
+	$(call print_header,Smoke-Checking Make Targets in Skill Examples)
+	@.github/scripts/ci/smoke-check-make-targets.sh
+	$(call print_success,Make-target references resolve)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Formatting

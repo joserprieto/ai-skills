@@ -81,7 +81,7 @@ Key details:
 ### 4. Test
 
 ```bash
-make serve
+make start
 # In another terminal:
 curl -sS -I https://dashboard.myapp.localhost/
 # Expected: HTTP/2 200, x-portless: 1, server: uvicorn

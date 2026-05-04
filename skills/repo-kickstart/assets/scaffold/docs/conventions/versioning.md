@@ -67,21 +67,11 @@ make release/patch
 
 ## Prerelease Versions
 
-For unstable releases before a major version:
-
-```bash
-# Alpha (early testing)
-make release/prerelease PRE=alpha
-# Result: 1.0.0-alpha.0
-
-# Beta (feature complete, testing)
-make release/prerelease PRE=beta
-# Result: 1.0.0-beta.0
-
-# Release candidate (final testing)
-make release/prerelease PRE=rc
-# Result: 1.0.0-rc.0
-```
+Prereleases (`alpha`, `beta`, `rc`) are an opt-in feature. The scaffold Makefile does not provide a
+`release/prerelease` target by default — add one to your project's Makefile if you need it, calling
+`commit-and-tag-version` with the appropriate flags. See the
+[commit-and-tag-version docs](https://github.com/absolute-version/commit-and-tag-version#prerelease-versions)
+for the exact invocation.
 
 ## Git Tags
 

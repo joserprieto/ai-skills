@@ -105,6 +105,40 @@ make lint/cross-refs   # Validate (also runs as part of `make lint`)
 
 **CI:** runs on every push/PR as a step inside the `validate-skills` job.
 
+## Smoke-check of `make <target>` references
+
+A third script (`.github/scripts/ci/smoke-check-make-targets.sh`) catches stale `make <target>`
+references in skill examples — the class of bug where a skill says "run `make test`" but no Makefile
+in scope declares that target. This caught a documentation/template mismatch in `repo-kickstart`
+(skill prescribed canonical targets `start` and `test` that the `makefile.tpl.md` template didn't
+define).
+
+**How it works:**
+
+- Walks every fenced bash/sh/zsh/makefile block in `skills/*.md`.
+- Extracts `make <target>` invocations (skipping content inside double-quoted strings to avoid
+  matches like `echo "make not found"`).
+- Cross-checks each reference against the union of declared targets in the **local Makefile** and
+  the **scaffold template** at `skills/repo-kickstart/assets/templates/makefile.tpl.md`.
+- Flags any reference that resolves to neither.
+
+**Limits (intentional):**
+
+- Static check — does NOT execute anything.
+- Validates `make <target>` only. Does NOT validate `npm run X`, `pnpm X`, `cargo X`, or arbitrary
+  shell commands.
+- Targets declared in skill bodies (as user-provided examples) are NOT considered. Use the canonical
+  names (`start`, `test`, `build`, etc.) from `makefile-service-conventions` if you need cross-skill
+  references to resolve.
+
+**Make targets:**
+
+```bash
+make lint/skill-examples   # Validate (also runs as part of `make lint`)
+```
+
+**CI:** runs on every push/PR as a step inside the `validate-skills` job.
+
 ## Why auto-generate
 
 The README table was hand-maintained for the first months of the project. It rotted within weeks: at
