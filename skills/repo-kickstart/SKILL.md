@@ -8,6 +8,7 @@ license: MIT
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.7.2'
+  last_verified: '2026-05-04'
 ---
 
 # Repo Kickstart

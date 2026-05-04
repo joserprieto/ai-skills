@@ -8,6 +8,7 @@ description: >
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.1.2'
+  last_verified: '2026-05-04'
   huly_api_client_version: '0.7.413'
 ---
 

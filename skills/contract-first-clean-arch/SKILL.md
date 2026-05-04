@@ -12,6 +12,7 @@ license: MIT
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.3.0'
+  last_verified: '2026-05-04'
 ---
 
 # Contract-First + Clean Architecture

@@ -103,6 +103,36 @@ metadata:
 Use sparingly — most skills are inherently stable text. Prereleases make sense for skills that embed
 tooling whose external dependency is itself in flux (e.g., a skill targeting an unreleased SDK).
 
+## `last_verified` metadata
+
+Each skill carries `metadata.last_verified` in its frontmatter as an ISO date:
+
+```yaml
+metadata:
+  author: …
+  version: '0.1.2'
+  last_verified: '2026-05-04'
+```
+
+It records the most recent date someone (human or systematic audit) confirmed the skill's content,
+triggers, examples and references are still accurate. **It is not the version date.**
+
+When to bump it:
+
+- After a multi-skill audit (the way the 2026-05-04 audit produced the current values).
+- After verifying that a referenced tool, library or API still behaves as documented.
+- After validating that the examples still execute (manual smoke check).
+
+When NOT to bump it:
+
+- Routine version bumps with no behavioural verification — the version moves, the `last_verified`
+  does not.
+- Format-only commits (prettier, lint).
+
+The field is informational. Tooling does not enforce a maximum age yet, but stale `last_verified`
+values are a signal to re-audit. A future addition could be a CI warning when any skill exceeds,
+e.g., 6 months without re-verification.
+
 ## Git tags
 
 Tags only apply to **repo-level** releases (driven by `make release/*`), prefixed with `v`:

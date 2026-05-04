@@ -12,6 +12,7 @@ license: MIT
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.2.1'
+  last_verified: '2026-05-04'
 ---
 
 # Portless Service Integration

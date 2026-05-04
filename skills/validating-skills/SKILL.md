@@ -7,6 +7,7 @@ description: >-
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
   version: '0.1.0'
+  last_verified: '2026-05-04'
 ---
 
 # Validating Agent Skills
