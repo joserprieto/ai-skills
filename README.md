@@ -37,6 +37,9 @@ All skills follow the [Agent Skills](https://agentskills.io/) open specification
 
 <!-- END AUTO-GENERATED SKILLS TABLE -->
 
+> _Table auto-generated from each skill's frontmatter. To add or modify a skill, see
+> [docs/conventions/skills-index.md](docs/conventions/skills-index.md)._
+
 ## Quick Start
 
 ```bash

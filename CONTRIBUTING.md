@@ -31,10 +31,28 @@ make check/deps
 
 ## Adding a New Skill
 
-1. Create a directory under `skills/` with the skill name (use hyphens)
-2. Add a `SKILL.md` file with YAML frontmatter (`name` and `description`)
-3. Follow the structure in the existing skills for reference
-4. Ensure the skill passes markdown linting
+1. Create a directory under `skills/` with the skill name (use hyphens).
+2. Add a `SKILL.md` file with YAML frontmatter (`name`, `description`, and `metadata.version`).
+3. Run `make skills/index` so the README table picks it up.
+4. Stage both `skills/<name>/SKILL.md` and the updated `README.md`, commit and push.
+
+The pre-commit hook and CI both verify the README is in sync. See
+[docs/conventions/skills-index.md](docs/conventions/skills-index.md) for the full flow,
+[docs/conventions/versioning.md](docs/conventions/versioning.md) for the per-skill SemVer model, and
+[docs/conventions/commits.md](docs/conventions/commits.md) for how to write the commit subject.
+
+## Project Conventions
+
+The repo's working conventions live under [docs/conventions/](docs/conventions/):
+
+- [build-tools.md](docs/conventions/build-tools.md) — Make targets and shell tooling
+- [cicd.md](docs/conventions/cicd.md) — CI pipeline structure
+- [changelog.md](docs/conventions/changelog.md) — CHANGELOG generation (Flow 2 releases)
+- [commits.md](docs/conventions/commits.md) — Conventional Commits + per-skill scopes
+- [dev-workflow.md](docs/conventions/dev-workflow.md) — Day-to-day workflow
+- [releases.md](docs/conventions/releases.md) — Per-skill and repo release flows
+- [skills-index.md](docs/conventions/skills-index.md) — Auto-generated README table
+- [versioning.md](docs/conventions/versioning.md) — Dual SemVer (repo + per-skill)
 
 ## Commit Convention
 

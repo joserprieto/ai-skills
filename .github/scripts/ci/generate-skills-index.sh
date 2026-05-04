@@ -198,18 +198,40 @@ fi
 
 NEW_README=$(replace_block "${README}" "${NEW_BLOCK_FILE}")
 
+# Normalize via prettier so the comparison is robust against table-column
+# alignment changes that prettier applies on every run. Without this step,
+# the script and prettier fight: the script writes unaligned tables, prettier
+# realigns them on `make format`, and the next --check fails on whitespace.
+prettier_normalize() {
+    local file="$1"
+    if command -v npx >/dev/null 2>&1; then
+        # --parser markdown is mandatory: the temp filename has no .md
+        # extension, and without an explicit parser prettier skips formatting
+        # entirely (silent no-op), leaving table columns unaligned.
+        npx prettier --write --parser markdown --log-level silent "${file}" >/dev/null 2>&1 || true
+    fi
+}
+
+# Temp must live INSIDE the repo so prettier picks up the project's
+# `.prettierrc` (config resolution walks parent directories from the file).
+TMP_README=$(mktemp "${REPO_ROOT}/.skills-index.XXXXXX")
+# shellcheck disable=SC2064
+trap "rm -f '${NEW_BLOCK_FILE}' '${TMP_README}'" EXIT
+echo "${NEW_README}" >"${TMP_README}"
+prettier_normalize "${TMP_README}"
+
 if [[ "${CHECK_MODE}" -eq 1 ]]; then
-    if ! diff -q <(echo "${NEW_README}") "${README}" >/dev/null 2>&1; then
+    if ! diff -q "${TMP_README}" "${README}" >/dev/null 2>&1; then
         echo "ERROR: README.md is out of sync with skills/ frontmatter."
         echo "       Run 'make skills/index' to regenerate."
         echo ""
         echo "Diff:"
-        diff <(echo "${NEW_README}") "${README}" || true
+        diff "${TMP_README}" "${README}" || true
         exit 1
     fi
     echo "README.md skills index in sync."
     exit 0
 fi
 
-echo "${NEW_README}" >"${README}"
+cp "${TMP_README}" "${README}"
 echo "README.md skills index regenerated."
