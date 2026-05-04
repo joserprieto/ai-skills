@@ -14,7 +14,8 @@ These have broken transitive dependencies. Use string class IDs instead. See got
 
 ### Credentials
 
-File: `~/.ai/secrets/huly-saas.env`
+File: a path of your choice (e.g. `~/.config/huly/credentials.env`), referenced via the
+`HULY_ENV_PATH` env var. Keep it outside the repo, gitignored, with restricted permissions.
 
 ```env
 HULY_EMAIL=<your-huly-email>
@@ -27,7 +28,7 @@ HULY_WORKSPACE=workspace-slug
 
 ```javascript
 const { connect } = require('@hcengineering/api-client');
-require('dotenv').config({ path: require('os').homedir() + '/.ai/secrets/huly-saas.env' });
+require('dotenv').config({ path: process.env.HULY_ENV_PATH });
 
 async function withHuly(fn) {
   const client = await connect(process.env.HULY_URL, {

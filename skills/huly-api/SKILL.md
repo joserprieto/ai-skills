@@ -7,7 +7,7 @@ description: >
   upload (markdown, files). Covers both Cloud and self-hosted instances.
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.1.0'
+  version: '0.1.1'
   huly_api_client_version: '0.7.413'
 ---
 
@@ -29,7 +29,10 @@ TypeScript library. WebSocket-based, NOT REST.
 
 ### Credentials
 
-Stored in `~/.ai/secrets/huly-saas.env`:
+Stored in a secure location of your choice — outside the repo, ignored by git, with restricted
+permissions. Common conventions: `~/.config/huly/credentials.env`, a per-project `.env.local`, or a
+secrets manager (1Password CLI, `pass`, `gopass`, `direnv` + `vault`). Reference the path via the
+`HULY_ENV_PATH` env var so scripts stay portable.
 
 ```env
 HULY_EMAIL=<your-huly-email>
@@ -38,7 +41,7 @@ HULY_URL=https://huly.app
 HULY_WORKSPACE=workspace-slug
 ```
 
-Load with: `require('dotenv').config({ path: '/path/to/.ai/secrets/huly-saas.env' })`
+Load with: `require('dotenv').config({ path: process.env.HULY_ENV_PATH })`
 
 ### npm packages
 
@@ -66,7 +69,7 @@ Generate token in Huly: Settings → General → API access → "Generate API to
 const { connect } = require('@hcengineering/api-client');
 const { generateId, SortingOrder } = require('@hcengineering/core');
 const { makeRank } = require('@hcengineering/rank');
-require('dotenv').config({ path: process.env.HULY_ENV_PATH || '~/.ai/secrets/huly-saas.env' });
+require('dotenv').config({ path: process.env.HULY_ENV_PATH });
 
 const client = await connect(process.env.HULY_URL, {
   token: process.env.HULY_API_TOKEN,
