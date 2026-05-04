@@ -17,7 +17,7 @@ works directly in Makefile targets or `package.json` scripts.
 
 ```makefile
 start: _ensure_deps
-	@portless dev.d.ps.myorg vite --profile development
+	@portless dev.d.ps.myorg vite --mode development
 ```
 
 Portless sees `vite` in the command, detects it as a framework that ignores `PORT`, and auto-injects
@@ -28,7 +28,7 @@ Portless sees `vite` in the command, detects it as a framework that ignores `POR
 ```json
 {
   "scripts": {
-    "dev": "portless run vite --profile development"
+    "dev": "portless run vite --mode development"
   }
 }
 ```
