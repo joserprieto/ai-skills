@@ -81,6 +81,11 @@ jobs:
           chmod +x .github/scripts/ci/generate-skills-index.sh
           .github/scripts/ci/generate-skills-index.sh --check
 
+      - name: Validate cross-refs in skills
+        run: |
+          chmod +x .github/scripts/ci/validate-cross-refs.sh
+          .github/scripts/ci/validate-cross-refs.sh
+
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # Format Check
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

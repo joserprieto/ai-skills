@@ -78,6 +78,33 @@ The `validate-skills` job in `.github/workflows/ci.yml` runs the same `--check` 
 PR. A stale README fails the job, which blocks merging. This catches the case of a developer who
 pushed with `--no-verify` or whose local hook was disabled.
 
+The same job also runs `validate-cross-refs.sh` (see [Cross-ref validation](#cross-ref-validation)
+below).
+
+## Cross-ref validation
+
+A second small script (`.github/scripts/ci/validate-cross-refs.sh`) walks every `.md` under
+`skills/` and verifies that internal markdown links point to existing files. It catches the "link to
+fantasma" pattern that hit `huly-api` v0.1.1 (a `references/project-config.md` reference that never
+had a corresponding file).
+
+**Rules:**
+
+- External URLs (`http://`, `https://`, `mailto:`, etc.) are skipped — out of scope.
+- Anchor-only links (`[text](#section)`) are skipped — would require parsing the destination.
+- Reference-style links (`[text][ref]` with definitions elsewhere) are skipped — out of scope for
+  v1; rare in skills.
+- Content inside fenced code blocks (` ``` ... ``` `) and inline code (`` ` ` ``) is skipped — those
+  are documentation of syntax, not real links.
+
+**Make targets:**
+
+```bash
+make lint/cross-refs   # Validate (also runs as part of `make lint`)
+```
+
+**CI:** runs on every push/PR as a step inside the `validate-skills` job.
+
 ## Why auto-generate
 
 The README table was hand-maintained for the first months of the project. It rotted within weeks: at

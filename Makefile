@@ -141,7 +141,7 @@ install: ## Install project dependencies and configure git hooks
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 .PHONY: lint
-lint: lint/md lint/shell lint/skills ## Run all linters
+lint: lint/md lint/shell lint/skills lint/cross-refs ## Run all linters
 	$(call print_success,All linters passed)
 
 .PHONY: lint/fix
@@ -183,6 +183,12 @@ skills/index/check: ## Verify the "Available Skills" table in README.md is up to
 	$(call print_header,Checking Skills Index)
 	@.github/scripts/ci/generate-skills-index.sh --check
 	$(call print_success,Skills index in sync)
+
+.PHONY: lint/cross-refs
+lint/cross-refs: ## Verify internal links in skills point to existing files
+	$(call print_header,Validating Cross-Refs)
+	@.github/scripts/ci/validate-cross-refs.sh
+	$(call print_success,Cross-refs valid)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Formatting
