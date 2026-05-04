@@ -7,7 +7,7 @@ description: >
   upload (markdown, files). Covers both Cloud and self-hosted instances.
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.1.1'
+  version: '0.1.2'
   huly_api_client_version: '0.7.413'
 ---
 
@@ -151,9 +151,8 @@ await client.createDoc('tracker:class:Milestone', projectId, { ...fields }, msId
 - **Connection + auth** → `references/connection.md`
 - **Issues (create, update, list, subtasks)** → `references/issues.md`
 - **Documents (wiki, content upload)** → `references/documents.md`
-- **Milestones + Components** → `references/structure.md`
-- **Project configuration (statuses, labels)** → `references/project-config.md`
-- **Attachments (files, images, drawio)** → `references/attachments.md`
+- **Milestones, Components, project configuration** → `references/structure.md`
+- **Attachments (files, images, drawio)** → `references/attachments.md` (work in progress)
 - **Gotchas + known issues** → `references/gotchas.md`
 
 ## Source code references (the REAL documentation)
