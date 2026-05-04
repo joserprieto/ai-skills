@@ -36,6 +36,7 @@ fi
 STAGED_MD=$(echo "$STAGED_FILES" | grep -E '\.md$' || true)
 STAGED_SH=$(echo "$STAGED_FILES" | grep -E '\.sh$' || true)
 STAGED_FORMAT=$(echo "$STAGED_FILES" | grep -E '\.(md|json|yml|yaml)$' || true)
+STAGED_SKILL=$(echo "$STAGED_FILES" | grep -E '^skills/[^/]+/SKILL\.md$' || true)
 
 echo "${BOLD}Pre-commit checks${RESET}"
 echo ""
@@ -137,6 +138,20 @@ if [ -n "$STAGED_SH" ]; then
         fi
     else
         echo "${WARN} shellcheck not found — skipped"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Skills index sync (only when a SKILL.md is staged)
+# ─────────────────────────────────────────────────────────────────────────────
+if [ -n "$STAGED_SKILL" ]; then
+    echo -n "  Checking skills index in README.md... "
+    if .github/scripts/ci/generate-skills-index.sh --check >/dev/null 2>&1; then
+        echo "${PASS}"
+    else
+        echo "${FAIL}"
+        echo "    Run: ${BOLD}make skills/index${RESET} and commit the updated README.md"
+        ERRORS=$((ERRORS + 1))
     fi
 fi
 

@@ -172,6 +172,18 @@ lint/skills: ## Validate skills against agentskills.io spec
 	@.github/scripts/ci/validate-skills.sh
 	$(call print_success,Skills validation passed)
 
+.PHONY: skills/index
+skills/index: ## Regenerate the "Available Skills" table in README.md
+	$(call print_header,Regenerating Skills Index)
+	@.github/scripts/ci/generate-skills-index.sh
+	$(call print_success,Skills index regenerated)
+
+.PHONY: skills/index/check
+skills/index/check: ## Verify the "Available Skills" table in README.md is up to date
+	$(call print_header,Checking Skills Index)
+	@.github/scripts/ci/generate-skills-index.sh --check
+	$(call print_success,Skills index in sync)
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Formatting
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
