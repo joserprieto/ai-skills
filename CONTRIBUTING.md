@@ -51,6 +51,8 @@ The repo's working conventions live under [docs/conventions/](docs/conventions/)
 - [commits.md](docs/conventions/commits.md) — Conventional Commits + per-skill scopes
 - [dev-workflow.md](docs/conventions/dev-workflow.md) — Day-to-day workflow
 - [releases.md](docs/conventions/releases.md) — Per-skill and repo release flows
+- [sanitization.md](docs/conventions/sanitization.md) — 2-phase sanitisation when migrating from
+  private to public
 - [skill-ownership.md](docs/conventions/skill-ownership.md) — Trigger ownership when skills overlap
 - [skills-index.md](docs/conventions/skills-index.md) — Auto-generated README table
 - [versioning.md](docs/conventions/versioning.md) — Dual SemVer (repo + per-skill)
