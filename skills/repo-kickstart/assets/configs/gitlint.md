@@ -7,5 +7,5 @@ ignore-merge-commits = true
 [title-max-length]
 line-length = 72
 [contrib-title-conventional-commits]
-types = feat,fix,docs,style,refactor,test,chore,ci,perf,build,revert
+types = feat,fix,docs,style,refactor,test,chore,ci,perf,build,revert,security
 ```

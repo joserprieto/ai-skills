@@ -7,7 +7,7 @@ description: >-
 license: MIT
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.7.1'
+  version: '0.7.2'
 ---
 
 # Repo Kickstart

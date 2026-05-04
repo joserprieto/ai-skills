@@ -59,6 +59,7 @@ const config = {
     { type: 'test', section: 'Tests', hidden: true },
     { type: 'build', section: 'Build System', hidden: false },
     { type: 'ci', section: 'Continuous Integration', hidden: true },
+    { type: 'security', section: 'Security', hidden: false },
   ],
 
   // ── Files that contain the version string to bump ───────────────────

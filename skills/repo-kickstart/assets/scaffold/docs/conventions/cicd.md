@@ -105,17 +105,23 @@ gh workflow run labels.yml
     └── lib/common.sh    # Shared logging + constants
 ```
 
-### SHA-Pinned Actions
+### Action versioning (floating tags vs SHA pins)
 
-All third-party GitHub Actions MUST be pinned to commit SHAs, not tags:
+Third-party GitHub Actions can be referenced two ways. Choose based on the project's risk profile:
 
 ```yaml
-# Good — immutable reference
-- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-# Bad — tag can be mutated
+# Floating tag — preferred default. Dependabot keeps it current.
 - uses: actions/checkout@v4
+
+# SHA pin — recommended for security-critical pipelines (handling secrets,
+# touching production, supply-chain hardening). Trades dependabot ergonomics
+# for immutability against tag mutation attacks.
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 ```
+
+The default scaffold uses floating tags + dependabot — that's the configuration most OSS projects
+adopt. Move to SHA pinning when (a) the workflow runs against production, (b) the repo handles
+sensitive secrets, or (c) you've adopted a supply-chain hardening posture explicitly.
 
 ### Adding a GitHub Actions CI Job (Checklist)
 
