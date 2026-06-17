@@ -59,10 +59,10 @@ LEAK_PATTERNS=(
     'xox[bprs]-[a-zA-Z0-9-]+'                           # Slack token
 )
 
-# Globally benign: git SSH remotes (git@host) and the public contact email.
-# Set the second alternative to YOUR public contact address.
+# Globally benign: git SSH remotes (git@host), RFC 2606 example domains
+# (example.com/.org/.net), and YOUR public contact email (replace below).
 # EVERYTHING else is a leak unless covered by a per-file pii-allow marker.
-LEAK_ALLOWLIST='^git@[a-zA-Z0-9.-]+$|^hi@example\.com$'
+LEAK_ALLOWLIST='^git@[a-zA-Z0-9.-]+$|@example\.(com|org|net)$|^hi@example\.com$'
 
 fail=0
 staged=$(git diff --cached --name-only --diff-filter=ACM)
