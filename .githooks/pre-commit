@@ -55,6 +55,12 @@ LEAK_PATTERNS=(
     'xox[bprs]-[a-zA-Z0-9-]+'                              # Slack tokens
 )
 
+# Globally benign: git SSH remotes (git@host), RFC 2606 example domains
+# (example.com/.org/.net), and the public contact email. Everything else is a leak
+# unless a per-file "pii-allow: <items> | reason: ..." marker exempts it (private
+# repos only). Secret patterns are always enforced.
+LEAK_ALLOWLIST='^git@[a-zA-Z0-9.-]+$|@example\.(com|org|net)$|^hi@joserprieto\.es$'
+
 LEAK_FOUND=0
 for file in $STAGED_FILES; do
     # Skip binary files and this hook itself
@@ -65,8 +71,17 @@ for file in $STAGED_FILES; do
     if [ -z "$STAGED_CONTENT" ]; then
         continue
     fi
+    # Per-file explicit PII allowance: "pii-allow: a@b, 600 000 000 | reason: ..."
+    # Items before the "|" are exempt from leak detection IN THIS FILE ONLY.
+    FILE_ALLOW=$(echo "$STAGED_CONTENT" | grep -oE 'pii-allow:[^|]*' \
+        | sed -E 's/^pii-allow:[[:space:]]*//' | tr ',' '\n' \
+        | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' | grep -v '^$' || true)
     for pattern in "${LEAK_PATTERNS[@]}"; do
-        if echo "$STAGED_CONTENT" | grep -qE "$pattern"; then
+        HITS=$(echo "$STAGED_CONTENT" | grep -oE "$pattern" | grep -vE "$LEAK_ALLOWLIST" || true)
+        if [ -n "$FILE_ALLOW" ] && [ -n "$HITS" ]; then
+            HITS=$(echo "$HITS" | grep -vxF "$FILE_ALLOW" || true)
+        fi
+        if [ -n "$HITS" ]; then
             if [ $LEAK_FOUND -eq 0 ]; then
                 echo "${FAIL}"
                 LEAK_FOUND=1

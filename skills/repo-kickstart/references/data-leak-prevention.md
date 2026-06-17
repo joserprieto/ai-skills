@@ -18,82 +18,81 @@ hi@example.com <a href="mailto:hi@example.com">
 
 The contact email SHOULD be the same as the git author email. Ask the user during setup (Step 1).
 
+### Contact email — the only-one rule
+
+The ONLY email allowed in committed files is the project's **public contact email** — the one shown
+on the maintainer's public profile (`gh api users/<login> --jq .email`). Any OTHER email (a personal
+address like `jose@example.com`, a teammate's, etc.) is treated as a leak and blocks the commit.
+
+### Allowing PII on purpose: `pii-allow` markers (PRIVATE repos only)
+
+A file in a PRIVATE repo may need PII on purpose (e.g. a real email-signature template). Authorize
+it explicitly, per file, with a marker in that same file:
+
+```text
+<!-- pii-allow: jose@example.com, 600 000 000 | reason: real signature, only used in mail from jose@example.com -->
+```
+
+- Items before the `|` are exempt from leak detection IN THAT FILE ONLY.
+- The `reason:` after `|` is MANDATORY — it documents why the exception exists.
+- Anything not covered by a marker (any non-contact email, any matched secret) still blocks.
+
+**PUBLIC repos: never.** A `pii-allow` marker authorizes against _accidental detection_, not against
+_visibility_. In a public repo, real PII must not be present at all — the marker is not a licence to
+expose it. The repo's visibility is the question you answer BEFORE any allowlist.
+
 ### Pre-commit Hook: Personal Data Detection
 
 Create `.githooks/pre-commit` to scan staged files for accidental personal data leaks:
 
 ```bash
-#!/bin/sh
-# Pre-commit hook: detect personal data leaks in staged files
-set -eu
+#!/bin/bash
+# Pre-commit hook: block personal-data / secret leaks in staged files.
+set -euo pipefail
 
-# ── Configurable patterns ──────────────────────────────────────────────
-# Add literal strings that must NEVER appear in committed files.
-# One pattern per line. Lines starting with # are comments.
-DENY_PATTERNS_FILE=".githooks/deny-patterns.txt"
+LEAK_PATTERNS=(
+    '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'   # any email
+    'AKIA[0-9A-Z]{16}'                                  # AWS access key
+    'sk-[a-zA-Z0-9]{20,}'                               # OpenAI/Stripe key
+    'ghp_[a-zA-Z0-9]{36}'                               # GitHub PAT
+    'glpat-[a-zA-Z0-9_-]{20}'                           # GitLab PAT
+    'xox[bprs]-[a-zA-Z0-9-]+'                           # Slack token
+)
 
-# ── Fallback built-in patterns ─────────────────────────────────────────
-# If no deny-patterns file exists, scan for common leak indicators.
-BUILTIN_PATTERNS='@gmail\.com
-@hotmail\.com
-@yahoo\.com
-@outlook\.com
-/Users/[a-zA-Z]
-/home/[a-zA-Z]
-C:\\Users\\'
+# Globally benign: git SSH remotes (git@host) and the public contact email.
+# Set the second alternative to YOUR public contact address.
+# EVERYTHING else is a leak unless covered by a per-file pii-allow marker.
+LEAK_ALLOWLIST='^git@[a-zA-Z0-9.-]+$|^hi@example\.com$'
 
-# ── Scan ───────────────────────────────────────────────────────────────
 fail=0
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
 
-if [ -f "$DENY_PATTERNS_FILE" ]; then
-    patterns=$(grep -v '^\s*#' "$DENY_PATTERNS_FILE" | grep -v '^\s*$' || true)
-else
-    patterns="$BUILTIN_PATTERNS"
-fi
+for f in $staged; do
+    file "$f" 2>/dev/null | grep -q text || continue
+    content=$(git show ":$f" 2>/dev/null || true)
+    [ -z "$content" ] && continue
+    # Per-file allowance: "pii-allow: a@b, 600 000 000 | reason: ..."
+    allow=$(echo "$content" | grep -oE 'pii-allow:[^|]*' \
+        | sed -E 's/^pii-allow:[[:space:]]*//' | tr ',' '\n' \
+        | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' | grep -v '^$' || true)
+    for pat in "${LEAK_PATTERNS[@]}"; do
+        hits=$(echo "$content" | grep -oE "$pat" | grep -vE "$LEAK_ALLOWLIST" || true)
+        [ -n "$allow" ] && [ -n "$hits" ] && hits=$(echo "$hits" | grep -vxF "$allow" || true)
+        if [ -n "$hits" ]; then
+            printf '\033[31mLEAK\033[0m %s — %s\n' "$f" "$(echo "$hits" | tr '\n' ' ')"
+            fail=1
+        fi
+    done
+done
 
-if [ -z "$patterns" ]; then
-    exit 0
-fi
-
-staged_files=$(git diff --cached --name-only --diff-filter=ACM)
-[ -z "$staged_files" ] && exit 0
-
-# NOTE: Use here-doc (not pipe) so the while loop runs in the current
-# shell — variables set inside (fail=1) survive after the loop.
-while IFS= read -r pat; do
-    [ -z "$pat" ] && continue
-    # shellcheck disable=SC2086
-    matches=$(echo "$staged_files" | xargs grep -lnE "$pat" 2>/dev/null || true)
-    if [ -n "$matches" ]; then
-        printf '\033[31mLEAK DETECTED\033[0m pattern: %s\n' "$pat"
-        echo "$matches" | while IFS= read -r file; do
-            printf '  → %s\n' "$file"
-        done
-        fail=1
-    fi
-done <<EOF
-$patterns
-EOF
-
-if [ "$fail" -ne 0 ]; then
-    printf '\n\033[31mCommit blocked.\033[0m Remove personal data from staged files.\n'
-    printf 'If this is a false positive, add an exception to %s\n' "$DENY_PATTERNS_FILE"
-    exit 1
-fi
+[ "$fail" -ne 0 ] && { printf '\nCommit blocked. Remove the data, or add a pii-allow marker (private repos only).\n'; exit 1; }
+exit 0
 ```
 
-Create `.githooks/deny-patterns.txt` with project-specific patterns:
-
-```text
-# Personal data patterns — one regex per line
-# These patterns are checked against ALL staged files on every commit.
-#
-# Add your personal email domains, usernames, home directory paths, etc.
-# Example:
-# @personal-domain\.com
-# /Users/myname
-# /home/myname
-```
+Set `LEAK_ALLOWLIST` to your public contact email. Everything else — any other email, plus
+AWS/OpenAI/GitHub/GitLab/Slack secret formats — blocks the commit unless a per-file `pii-allow`
+marker exempts it (private repos only; see above).
 
 **Hook installation** (add to Makefile `install` target or document in CONTRIBUTING.md):
 
