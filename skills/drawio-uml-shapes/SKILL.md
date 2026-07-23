@@ -7,8 +7,8 @@ description: >-
   reference", or "UML notation in draw.io".
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.5.1'
-  last_verified: '2026-05-04'
+  version: '0.6.0'
+  last_verified: '2026-07-23'
 ---
 
 # Draw.io UML Shape Reference
@@ -31,9 +31,10 @@ correct shape-to-style mappings verified against draw.io 24.x desktop.
 - Brand or styling decisions (load your project's brand skill instead)
 - AWS/Azure/GCP infrastructure icons (use cloud-specific shape libraries)
 
-## Companion file
+## Companion files
 
-See `shapes-reference.md` for the complete shape catalog with all style strings and XML examples.
+- `shapes-reference.md` — complete shape catalog, all style strings and XML examples.
+- `layout-reference.md` — geometry on the grid, crossing-free tree layout, embedded fonts.
 
 ## Supported diagram types
 
@@ -85,6 +86,12 @@ All defaults use the Tailwind Slate palette for a clean, neutral appearance.
   - Titles: 14-16px, bold (`fontStyle=1`)
   - Elements: 9-11px, regular
   - Details and edge labels: 7-8px
+
+### Embedding fonts offline
+
+`fontFamily=X` alone falls back to the default face wherever X is not installed — CLI and PNG/SVG
+exports on another machine included. Embed the whole family (every weight **and** italics) as a
+`data:text/css` `fontSource`. Procedure, caveats and cost: `layout-reference.md` §3.
 
 ### Brand override mechanism
 
@@ -329,6 +336,19 @@ edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;j
 
 **Rule of thumb:** If more than 2 edges cross at the same point, reorganize the layout. Edge jumps
 are a fallback, not a substitute for good spatial arrangement.
+
+### Tree / hierarchy layout — zero crossings by construction
+
+For trees and strict hierarchies you can guarantee zero crossings **without** jump arcs: contiguous
+subtree bands, plus one vertical bus per parent with pinned `exitX`/`entryX` and explicit waypoints.
+Prefer it to `jumpStyle=arc` whenever the graph is a tree. Full method: `layout-reference.md` §1.
+
+### Geometry on the grid
+
+Keep the model on `gridSize`: sizes as grid multiples and every coordinate snapped; ≥2 cells of
+separation; height derived from line count; width fitted per **column**, not per box; a small
+**absolute** corner radius; `verticalAlign=middle` by default; and zero overlaps, verified
+mechanically rather than by eye. Rules table: `layout-reference.md` §2.
 
 ### Edge types table
 
