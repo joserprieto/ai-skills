@@ -49,16 +49,23 @@ project/
 
 ## Quick Reference
 
-| Command               | Effect                                         |
-| --------------------- | ---------------------------------------------- |
-| `make start`          | Start default service(s) in background         |
-| `make start/<svc>/fg` | Start in foreground (Ctrl+C to stop)           |
-| `make stop`           | Stop all services (graceful SIGTERM → SIGKILL) |
-| `make status`         | Show running/stopped with health check         |
-| `make status/details` | Add PID, uptime, log size, paths               |
-| `make tail`           | `tail -f` all running service logs             |
-| `make logs`           | List log files with sizes                      |
-| `make logs/rotate`    | Rotate log files                               |
+| Command               | Effect                                               |
+| --------------------- | ---------------------------------------------------- |
+| `make start`          | Start the default service set in background          |
+| `make start/<svc>`    | Start one service in background                      |
+| `make start/<svc>/fg` | Start in foreground (Ctrl+C to stop)                 |
+| `make stop`           | Stop all services (graceful SIGTERM → SIGKILL)       |
+| `make stop/<svc>`     | Stop one service                                     |
+| `make restart`        | Stop + start (PRIMARY — always ship with start/stop) |
+| `make restart/<svc>`  | Restart one service                                  |
+| `make status`         | Show running/stopped with health check               |
+| `make status/<svc>`   | Status of one service                                |
+| `make status/details` | Add PID, uptime, log size, paths                     |
+
+Every managed service ships the **full quartet** (`start/stop/restart/status`, aggregate AND
+per-service) — see `makefile-service-conventions` for the binding rule; this skill's manager is one
+way to implement it. | `make tail` | `tail -f` all running service logs | | `make logs` | List log
+files with sizes | | `make logs/rotate` | Rotate log files |
 
 ## Implementation Steps
 
@@ -114,6 +121,8 @@ start: _ensure
 
 stop:
   @$(SM) stop --all
+
+restart: stop start
 
 status:
   @$(SM) status

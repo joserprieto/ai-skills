@@ -61,7 +61,7 @@ UV ?= uv
 
 serve: _ensure_deps generate
 ifdef HAS_PORTLESS
-	@portless dashboard.myapp \
+	@portless dashboard.localdev.myapp \
 		sh -c 'exec $(UV) run uvicorn serve_app:app --host 127.0.0.1 --port "$$PORT" --log-level info'
 else
 	@$(UV) run uvicorn serve_app:app --host 127.0.0.1 --port 8765
@@ -83,7 +83,7 @@ Key details:
 ```bash
 make start
 # In another terminal:
-curl -sS -I https://dashboard.myapp.localhost/
+curl -sS -I https://dashboard.localdev.myapp.localhost/
 # Expected: HTTP/2 200, x-portless: 1, server: uvicorn
 ```
 

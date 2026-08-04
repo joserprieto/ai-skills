@@ -75,31 +75,55 @@ portless proxy start --foreground
 
 # Stop proxy
 portless proxy stop
+
+# Health check — proxy, routes, DNS, CA trust in one pass (0.15.0+)
+portless doctor
+
+# Start the proxy automatically when the OS starts
+portless service install
+
+# Kill orphaned dev servers left behind by crashed sessions
+portless prune
 ```
+
+Portless requires **Node 24+** (since 0.13.1). Since 0.15.4 the proxy binds **loopback-only** unless
+LAN mode is explicitly enabled — dev services are not exposed to the network by default.
 
 **Do NOT write proxy-alive checks in Makefiles** before invoking `portless <name> <cmd>` — the
 command itself handles auto-start. Checks like `lsof -iTCP:443 -sTCP:LISTEN` are unreliable because
 privileged port owners may not be visible without root, and return false negatives.
 
-## Step 2: Naming convention (with optional tenant tag)
+## Step 2: Naming convention (component first)
 
 ```text
-{mode}.{profile-initial}.{app}.{tenant}.localhost
+[<worktree>.]<component>.<environment>.<project>.<owner>.localhost
 ```
 
-- `mode`: `dev`, `preview`, `build`, `serve`, `dashboard`, ...
-- `profile-initial`: `d` (development), `p` (production), `s` (staging) — optional
-- `app`: short code (`ps`, `sc`, `cp-analytics`, ...)
-- `tenant`: optional namespace for your team/org (e.g. `myorg`, `acme`)
+The first thing you read is the thing you are looking at — the way public DNS reads
+(`api.github.com`, not `prod.api.github.com`). Five axes:
 
-Examples (using `myorg` as the tenant tag):
+- `component`: WHAT answers at the URL — `app`, `core`, `storybook`, `preview`, `dashboard`, ...
+  Name the responsibility, not the interface (`core`, not `api`).
+- `environment`: a real taxonomy, not a synonym for "local" — `localdev` (a developer's machine),
+  `dev` (a SHARED deployed dev server), `qa`, `preprod`, `prod`. A URL served from a laptop is
+  `localdev`, never `dev`.
+- `project`: project short name (`myapp`)
+- `owner`: org/tenant namespace (`myorg`, `acme`) — drop it for single-org setups
+- `worktree`: composed BY PORTLESS, never by your Makefile. `portless run --name <base>` keeps the
+  base name on the main checkout and prepends the branch as the LEFTMOST label in a linked git
+  worktree (0.15.5+), so presence is detected by label count, not position.
 
-- `dev.d.ps.myorg.localhost` — dev server, development profile, Personal Site
-- `preview.p.ps.myorg.localhost` — preview, production profile, PS
-- `dev.sc.myorg.localhost` — site components dev (no profile axis)
-- `dashboard.cp-analytics.myorg.localhost` — analytics dashboard
+Examples (using `myorg` as the owner):
 
-Drop the tenant tag for single-org projects: `{mode}.{app}.localhost`.
+- `app.localdev.myapp.myorg.localhost` — the app, on a developer's machine
+- `core.localdev.myapp.myorg.localhost` — the domain service behind it
+- `storybook.localdev.myapp.myorg.localhost` — the component workshop
+- `fix-ui.app.localdev.myapp.myorg.localhost` — same app, linked worktree on branch `fix-ui` (prefix
+  added by portless, zero Makefile involvement)
+
+A mode toggle (mock vs real backend, feature profile) is an env var flowing into the child process,
+NOT a second route: two names for one component means which one answers depends on what happens to
+be running.
 
 ## Step 3: Env vars portless injects into child processes
 
@@ -132,9 +156,11 @@ portless myapp sh -c 'exec <tool> --port "$PORT" --host 127.0.0.1 ...'
 ### Mode A — Managed lifecycle (most common)
 
 ```bash
-portless dev.d.ps vite
-# → https://dev.d.ps.myorg.localhost
+portless app.localdev.myapp vite
+# → https://app.localdev.myapp.localhost
 # Portless assigns PORT, launches vite, registers route
+# Worktree-aware variant (branch prefixed as leftmost label in linked worktrees):
+portless run --name app.localdev.myapp vite
 ```
 
 ### Mode B — Infer name from project
@@ -172,7 +198,7 @@ required** — it's a plain CLI command you invoke.
 
 ```makefile
 serve: generate
-	@portless dashboard.myapp <command>
+	@portless dashboard.localdev.myapp <command>
 ```
 
 ### In `package.json`
@@ -205,6 +231,17 @@ Firefox, Edge.
 - **Custom TLD** (`--tld test`): `.test` does not auto-resolve; portless auto-syncs `/etc/hosts`
   when you use it
 
+**Custom TLD rules** (0.15.1+):
+
+- `--tld` is repeatable and `PORTLESS_TLD` takes a comma-separated list. Multi-TLD serves the SAME
+  app names under every TLD — not different apps under different ones. `PORTLESS_URL` carries the
+  first.
+- Since 0.15.5 a TLD may be **multi-segment** (`--tld internal.acme`), so local URLs can mirror
+  production structure. Labels are DNS-validated; overlapping TLDs resolve longest-match.
+- Avoid `.dev` (Google-owned, HSTS-forced in browsers) and `.local` (collides with mDNS/Bonjour).
+  `.test` is IANA-reserved and safe, but needs the hosts sync above.
+- **LAN mode ignores a custom TLD** — it serves under `.local`; the two cannot be combined.
+
 Manual sync:
 
 ```bash
@@ -219,6 +256,9 @@ export PORTLESS_SYNC_HOSTS=1
 ```
 
 ## Step 7: Troubleshooting
+
+Run `portless doctor` first — it checks the proxy, the routes, DNS resolution and CA trust in one
+pass, and points at the failing layer before you start guessing.
 
 ### Cert stuck at 0 bytes (most common stuck state)
 
@@ -273,7 +313,9 @@ If `curl http://127.0.0.1:<port>/` works but `curl https://<name>.localhost/` fa
 If `portless list` shows `-> localhost:4321` and your upstream binds to `::1:4321` but portless
 connects to `127.0.0.1:4321`, the upstream is unreachable. **Always bind upstreams to `127.0.0.1`
 explicitly** — don't use `localhost` (which may resolve to `::1`) or `0.0.0.0` (works but exposes
-the service on all interfaces).
+the service on all interfaces). Since 0.15.2 an IPv6-only upstream no longer 502s, but explicit
+`127.0.0.1` remains the convention here — it is what the proxy dials first and it keeps the service
+off the LAN.
 
 ### Proxy log location
 
@@ -314,8 +356,12 @@ webpack-dev-server).
 
 ## Related skills
 
-- `makefile-service-conventions` — canonical Makefile targets (start, stop, serve, status) that wire
-  into portless
+- `makefile-service-conventions` — canonical Makefile targets (`start`/`stop`/`restart`/`status`,
+  aggregate AND per-service `…/<svc>` — the full quartet is mandatory per service) that wire into
+  portless. `restart` is part of the primary set; for **managed (Mode A) routes** a naive `restart`
+  is the classic breaker — `stop` must whole-tree-kill the route's process AND clean by route pid
+  before `start` re-registers (idempotent `start` required); a Mode C alias just re-runs
+  `alias --remove` + `alias`.
 - `service-manager` — optional higher-level orchestrator when you have many services with PID
   tracking needs (not required for portless use)
 - `repo-kickstart` — bootstrap a new project with portless wired in

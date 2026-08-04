@@ -123,6 +123,21 @@ digraph make_flow {
 These names are **reserved** — use them only with the intent described. If a project needs none of
 them, omit the target rather than repurpose the name.
 
+**Primary service set (MANDATORY as a unit):** any Makefile that manages a service MUST implement
+`start`, `stop`, **`restart`**, and `status` together — never ship `start`/`stop` without `restart`.
+The minimal implementation is composition (`restart: stop start`); only deviate when the service's
+lifecycle requires it (e.g. a managed portless route needing a whole-tree kill — see
+`portless-service-integration`).
+
+**Per-service quartet (MANDATORY):** every managed service `<svc>` exposes the full quartet with
+verb-first namespacing (Step 2): `start/<svc>`, `stop/<svc>`, `restart/<svc>`, `status/<svc>` —
+never a partial subset. The bare forms operate on the whole: `stop`/`status` cover ALL services;
+`start`/`restart` bring up the **default set**, which the `help` line documents explicitly (e.g.
+"front (mock) + back + storybook"). Mutually exclusive **variants** of one service (e.g. a mock
+frontend vs the same frontend against a real backend) are not extra services: they share
+`stop/<svc>` and `status/<svc>`, each variant gets its own `start/…` and `restart/…`, and the
+default set picks exactly one variant.
+
 | Target        | Purpose                                      | Depends on       |
 | ------------- | -------------------------------------------- | ---------------- |
 | `help`        | Print usage with target list and examples    | (none — default) |
@@ -162,12 +177,14 @@ keep only `deps`.
 When a target has variants, split with `/` instead of inventing new names.
 
 ```makefile
-start           # start default service
+start           # start the default service set
 start/preview   # start build + preview server
-stop            # stop default
-stop/all        # stop every managed service
+stop            # stop every managed service
 stop/preview    # stop preview server only
+restart         # stop + start (default set)
 restart/preview # restart preview
+status          # status of every managed service
+status/preview  # status of preview only
 lint/md         # lint markdown only
 lint/md/fix     # auto-fix markdown lint
 ```
@@ -423,13 +440,13 @@ similar orchestrator** to use portless — plain `portless <name> <cmd>` as the 
 
 ```makefile
 start: _ensure_deps
-	@portless dev.myapp.myorg vite
+	@portless app.localdev.myapp.myorg vite
 
 start/backend: _ensure_deps
-	@portless api.myapp.myorg go run ./cmd/server
+	@portless core.localdev.myapp.myorg go run ./cmd/server
 
 start/dashboard: _ensure_deps
-	@portless dashboard.myapp.myorg \
+	@portless dashboard.localdev.myapp.myorg \
 		sh -c 'exec uv run uvicorn serve_app:app --host 127.0.0.1 --port "$$PORT"'
 ```
 

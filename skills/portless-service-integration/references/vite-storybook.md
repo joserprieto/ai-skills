@@ -17,7 +17,7 @@ works directly in Makefile targets or `package.json` scripts.
 
 ```makefile
 start: _ensure_deps
-	@portless dev.d.ps.myorg vite --mode development
+	@portless app.localdev.myapp.myorg vite --mode development
 ```
 
 Portless sees `vite` in the command, detects it as a framework that ignores `PORT`, and auto-injects
@@ -76,7 +76,7 @@ Equivalent in `package.json`:
 
 ```makefile
 start/backend: _ensure_deps
-	@portless api.myapp next start
+	@portless core.localdev.myapp next start
 ```
 
 Next.js, Express, and Nuxt all read `process.env.PORT` automatically. Just prefix with
@@ -102,7 +102,7 @@ PROFILE_INITIAL := $(shell echo $(PROFILE) | cut -c1)
 Invocation:
 
 ```bash
-make start                         # dev.d.ps.myorg.localhost (development)
+make start                         # app.localdev.myapp.myorg.localhost (development)
 make start PROFILE=production       # dev.p.ps.myorg.localhost
 make start PROFILE=staging          # dev.s.ps.myorg.localhost
 ```
@@ -135,7 +135,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://api.myapp.localhost',
+        target: 'https://core.localdev.myapp.localhost',
         changeOrigin: true, // CRITICAL
         ws: true,
       },
@@ -150,7 +150,7 @@ Same for webpack-dev-server:
 devServer: {
   proxy: [{
     context: ["/api"],
-    target: "https://api.myapp.localhost",
+    target: "https://core.localdev.myapp.localhost",
     changeOrigin: true,
   }],
 }
@@ -180,5 +180,42 @@ and just as reliable.
 | `portless myapp next dev --port 3000`                   | Omit `--port`; Next.js reads `PORT` env var                     |
 | Writing a service-manager just for portless integration | Not needed; call `portless` directly in Make/npm scripts        |
 | Vite proxy without `changeOrigin: true`                 | Set `changeOrigin: true` to avoid `508 Loop Detected`           |
-| Same URL for dev and preview                            | Separate `dev.*` and `preview.*` subdomains                     |
+| Same URL for dev and preview                            | Separate `app.*` and `preview.*` components                     |
 | Using `0.0.0.0` host                                    | Portless wants `127.0.0.1`; for Vite/Astro it auto-injects this |
+
+## HMR websocket behind portless (Storybook / any Vite with an explicit port)
+
+Symptom: the page loads over `https://name.localhost`, but the console loops
+`WebSocket connection to 'wss://name.localhost:<rawPort>' failed: ERR_SSL_PROTOCOL_ERROR` +
+`[vite] server connection lost. Polling for restart...`, and long-lived tabs go stale after
+refactors (modules can't hot-reload).
+
+Cause: when Vite's dev server has an explicit port (Storybook always sets one), the HMR client
+embeds that RAW port in the websocket URL — but TLS terminates at the portless proxy on 443, not at
+the raw port.
+
+Fix — route the socket through the proxy, only when running behind portless (detect via the
+`PORTLESS_URL` env var the launcher injects):
+
+```ts
+// .storybook/main.ts (or vite.config.ts server block)
+viteFinal: async (viteConfig) => ({
+  ...viteConfig,
+  server: {
+    ...viteConfig.server,
+    ...(process.env.PORTLESS_URL
+      ? {
+          hmr: {
+            ...(typeof viteConfig.server?.hmr === 'object' ? viteConfig.server.hmr : {}),
+            protocol: 'wss',
+            clientPort: 443,
+          },
+        }
+      : {}),
+  },
+}),
+```
+
+Note `hmr` types as `boolean | object` in Vite — guard before spreading. Plain `storybook dev`
+outside portless is unaffected (the conditional keeps defaults). Verify: the story page console
+shows zero `ERR_SSL_PROTOCOL_ERROR` and HMR updates land without a manual reload.

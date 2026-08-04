@@ -55,7 +55,7 @@ Key points:
 
 ```makefile
 start/backend: _ensure_deps
-	@portless api.myapp.myorg go run ./cmd/server
+	@portless core.localdev.myapp.myorg go run ./cmd/server
 ```
 
 Or with a pre-built binary:
@@ -65,11 +65,11 @@ build/backend:
 	@cd packages/backend && go build -o bin/server ./cmd/server
 
 start/backend: build/backend
-	@portless api.myapp.myorg ./packages/backend/bin/server
+	@portless core.localdev.myapp.myorg ./packages/backend/bin/server
 ```
 
 Portless sets `PORT` and `HOST` env vars, launches the binary, registers the route. Access via
-`https://api.myapp.myorg.localhost/`.
+`https://core.localdev.myapp.myorg.localhost/`.
 
 ## Explicit `Server` struct for production-like settings
 
@@ -166,8 +166,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Access via `wss://api.myapp.myorg.localhost/ws` automatically (portless upgrades `https://` →
-`wss://`).
+Access via `wss://core.localdev.myapp.myorg.localhost/ws` automatically (portless upgrades
+`https://` → `wss://`).
 
 ## Common mistakes
 
