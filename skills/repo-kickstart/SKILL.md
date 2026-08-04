@@ -373,27 +373,29 @@ covering email obfuscation, pre-commit hooks, history purge, and `.gitignore` pa
 
 ## Common Mistakes
 
-| Mistake                                | Fix                                                                         |
-| -------------------------------------- | --------------------------------------------------------------------------- |
-| markdownlint scans node_modules        | Use `.markdownlint-cli2.jsonc` with `ignores` array                         |
-| shellcheck fails on dynamic `source`   | `--severity=warning` in Makefile AND `severity: warning` in CI action       |
-| prettier reformats CHANGELOG           | Add `CHANGELOG.md` to `.prettierignore`                                     |
-| CI workflow interpolates user input    | Always use `env:` variables, never direct `${{ }}` in `run:`                |
-| commit-and-tag-version fails on commit | Use `--skip.commit --skip.tag`, then commit manually                        |
-| `.semver` needs trailing newline       | Some tools strip it; configure `end-of-file-fixer` to exclude               |
-| Personal email in CODE_OF_CONDUCT      | Use obfuscated format: `hi [at] example [dot] com`                          |
-| Personal data in git history           | `git rm` only removes from HEAD; use `git filter-repo` to purge             |
-| Personal paths in examples             | Use generic paths (`~/Projects/...`) not real usernames                     |
-| Squash doesn't purge history           | Squash only rewrites HEAD chain; old refs survive in reflog/remotes         |
-| `.gitkeep` for empty directories       | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks          |
-| Dependabot PRs have no labels          | Labels must pre-exist in the repo; sync `labels.json` first                 |
-| CI auto-close doesn't find issues      | Missing `job:*` labels; run labels sync workflow before first CI run        |
-| Content filter blocks file creation    | Use `cp` + `sed` for CoC/Security files — never generate through model      |
-| `--first-release` keeps version 0.0.0  | Use `--release-as minor` for first release; `--first-release` skips bump    |
-| CHANGELOG header duplicated            | Start with empty `CHANGELOG.md`; `config.header` in `.versionrc.js` adds it |
-| `pyproject.toml` not bumped            | `writeVersion` regex needs `/m` (multiline) flag; `version =` is not at BOF |
-| `RELEASE_FILES` missing bump targets   | Every file in `bumpFiles` must also appear in `RELEASE_FILES` in Makefile   |
-| Manual `git tag` instead of `make`     | Always use `make release/*` — manual tags skip CHANGELOG + version bumps    |
+| Mistake                                              | Fix                                                                                                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| markdownlint scans node_modules                      | Use `.markdownlint-cli2.jsonc` with `ignores` array                                                                                                    |
+| shellcheck fails on dynamic `source`                 | `--severity=warning` in Makefile AND `severity: warning` in CI action                                                                                  |
+| prettier reformats CHANGELOG                         | Add `CHANGELOG.md` to `.prettierignore`                                                                                                                |
+| CI workflow interpolates user input                  | Always use `env:` variables, never direct `${{ }}` in `run:`                                                                                           |
+| commit-and-tag-version fails on commit               | Use `--skip.commit --skip.tag`, then commit manually                                                                                                   |
+| `.semver` needs trailing newline                     | Some tools strip it; configure `end-of-file-fixer` to exclude                                                                                          |
+| Personal email in CODE_OF_CONDUCT                    | Use obfuscated format: `hi [at] example [dot] com`                                                                                                     |
+| Personal data in git history                         | `git rm` only removes from HEAD; use `git filter-repo` to purge                                                                                        |
+| Personal paths in examples                           | Use generic paths (`~/Projects/...`) not real usernames                                                                                                |
+| Squash doesn't purge history                         | Squash only rewrites HEAD chain; old refs survive in reflog/remotes                                                                                    |
+| `.gitkeep` for empty directories                     | Use `.gitignore` with `*` + `!.gitignore` — protects against leaks                                                                                     |
+| Dependabot PRs have no labels                        | Labels must pre-exist in the repo; sync `labels.json` first                                                                                            |
+| CI auto-close doesn't find issues                    | Missing `job:*` labels; run labels sync workflow before first CI run                                                                                   |
+| Content filter blocks file creation                  | Use `cp` + `sed` for CoC/Security files — never generate through model                                                                                 |
+| `--first-release` keeps version 0.0.0                | Use `--release-as minor` for first release; `--first-release` skips bump                                                                               |
+| CHANGELOG header duplicated                          | Start with empty `CHANGELOG.md`; `config.header` in `.versionrc.js` adds it                                                                            |
+| `pyproject.toml` not bumped                          | `writeVersion` regex needs `/m` (multiline) flag; `version =` is not at BOF                                                                            |
+| `RELEASE_FILES` missing bump targets                 | Every file in `bumpFiles` must also appear in `RELEASE_FILES` in Makefile                                                                              |
+| Manual `git tag` instead of `make`                   | Always use `make release/*` — manual tags skip CHANGELOG + version bumps                                                                               |
+| `labels.yml` with only `issues: write`               | Explicit `permissions:` replaces defaults → checkout 404s on private repos; add `contents: read`                                                       |
+| Expecting the initial push to sync labels or release | Branch-creation push skips `paths`-filtered workflows, and a tag pushed with it fires no event; `gh workflow run labels.yml` + push the tag separately |
 
 ## Content Filtering — Template Files with Sensitive Language
 

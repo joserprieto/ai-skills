@@ -68,6 +68,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read
   issues: write
 
 jobs:
@@ -88,6 +89,20 @@ jobs:
 `delete-other-labels: false` preserves any manually created labels. Set to `true` for strict
 label-as-code enforcement.
 
-**First-time setup:** After the initial commit, either push to main (triggers the workflow) or run
-it manually via `gh workflow run labels.yml`. Labels must be synced BEFORE the first CI failure or
-dependabot PR.
+**`contents: read` is NOT optional.** An explicit `permissions:` block replaces every default grant,
+so with only `issues: write` the checkout step has no read access and fails with
+`fatal: repository not found` — on PRIVATE repos only, because anonymous fetch masks the bug on
+public ones (measured 2026-08-05 on a private repository).
+
+**First-time setup:** the initial push of a new repository does NOT trigger this workflow — a
+`paths`-filtered workflow does not fire on the push that creates the branch (measured 2026-08-05:
+CI, with no paths filter, ran on that same push; Sync Labels did not). Run it manually after the
+first push:
+
+```bash
+gh workflow run labels.yml
+```
+
+Labels must be synced BEFORE the first CI failure or dependabot PR. The same trap applies to
+`release.yml`: a tag pushed in the same `git push -u origin main --tags` that creates the branch
+fires no tag event — push the tag separately after the branch exists (or delete and re-push it).
