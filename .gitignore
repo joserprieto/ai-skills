@@ -62,3 +62,10 @@ __pycache__/
 # Skill test workspaces (generated outputs, not source)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 *-workspace/
+
+# Local-only, never committed: agent context symlinks and per-repo harness settings
+*.local.*
+.claude/settings.local.json
+
+# Agent working memory + local harness — deliberately unversioned
+.ai/
