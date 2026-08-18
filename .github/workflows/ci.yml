@@ -102,7 +102,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -115,11 +115,50 @@ jobs:
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # CI Summary
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Secret Scan
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  scan-secrets:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: '8.30.1'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          # gitleaks git walks whatever history is present locally. checkout
+          # defaults to fetch-depth 1, which makes it scan a single commit and
+          # exit 0 no matter what earlier commits contain.
+          fetch-depth: 0
+
+      - name: Install gitleaks (pinned, checksum-verified)
+        run: |
+          curl -sSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          sha256sum --ignore-missing -c "gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          tar -xzf "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" gitleaks
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Fail fast if the checkout is shallow
+        run: |
+          if [[ "$(git rev-parse --is-shallow-repository)" == "true" ]]; then
+            echo "::error::Shallow checkout: gitleaks would scan a truncated history and pass. Set fetch-depth: 0."
+            exit 1
+          fi
+
+      - name: Scan full git history for secrets
+        # --redact always: this repository is public and so are its Actions logs.
+        run: gitleaks git . --no-banner --redact
+
   ci-summary:
     name: CI Summary
     runs-on: ubuntu-latest
     if: always()
-    needs: [lint-markdown, lint-shell, validate-skills, format-check]
+    needs: [lint-markdown, lint-shell, validate-skills, format-check, scan-secrets]
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -136,16 +175,19 @@ jobs:
           LINT_SHELL_RESULT: ${{ needs.lint-shell.result }}
           VALIDATE_SKILLS_RESULT: ${{ needs.validate-skills.result }}
           FORMAT_RESULT: ${{ needs.format-check.result }}
+          SECRETS_RESULT: ${{ needs.scan-secrets.result }}
         run: |
           echo "lint-markdown=${LINT_MD_RESULT}" >> "$GITHUB_OUTPUT"
           echo "lint-shell=${LINT_SHELL_RESULT}" >> "$GITHUB_OUTPUT"
           echo "validate-skills=${VALIDATE_SKILLS_RESULT}" >> "$GITHUB_OUTPUT"
           echo "format-check=${FORMAT_RESULT}" >> "$GITHUB_OUTPUT"
+          echo "scan-secrets=${SECRETS_RESULT}" >> "$GITHUB_OUTPUT"
 
           if [[ "${LINT_MD_RESULT}" == "success" && \
                 "${LINT_SHELL_RESULT}" == "success" && \
                 "${VALIDATE_SKILLS_RESULT}" == "success" && \
-                "${FORMAT_RESULT}" == "success" ]]; then
+                "${FORMAT_RESULT}" == "success" && \
+                "${SECRETS_RESULT}" == "success" ]]; then
             echo "overall=success" >> "$GITHUB_OUTPUT"
           else
             echo "overall=failure" >> "$GITHUB_OUTPUT"
@@ -157,6 +199,7 @@ jobs:
           LINT_SHELL_RESULT: ${{ needs.lint-shell.result }}
           VALIDATE_SKILLS_RESULT: ${{ needs.validate-skills.result }}
           FORMAT_RESULT: ${{ needs.format-check.result }}
+          SECRETS_RESULT: ${{ needs.scan-secrets.result }}
           OVERALL_RESULT: ${{ steps.result.outputs.overall }}
         run: |
           echo "## CI Results" >> "$GITHUB_STEP_SUMMARY"
@@ -167,6 +210,7 @@ jobs:
           echo "| Shell Lint | \`${LINT_SHELL_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Skills Validation | \`${VALIDATE_SKILLS_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Format Check | \`${FORMAT_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Secret Scan | \`${SECRETS_RESULT}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
           if [[ "${OVERALL_RESULT}" == "success" ]]; then
@@ -204,6 +248,17 @@ jobs:
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: .github/scripts/ci/on-failure.sh "validate-skills" "${RUN_URL}"
 
+      - name: Handle scan-secrets failure
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.scan-secrets.result == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: .github/scripts/ci/on-failure.sh "scan-secrets" "${RUN_URL}"
+
+      # --- Success handling (main branch only) ---
+
       - name: Handle format-check failure
         if: >-
           always() && github.ref == 'refs/heads/main' && needs.format-check.result == 'failure'
@@ -235,6 +290,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/ci/on-success.sh "validate-skills"
+
+      - name: Handle scan-secrets success
+        if: >-
+          always() && github.ref == 'refs/heads/main' && needs.scan-secrets.result == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/ci/on-success.sh "scan-secrets"
 
       - name: Handle format-check success
         if: >-

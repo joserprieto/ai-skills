@@ -74,11 +74,46 @@ jobs:
         run: npx prettier --check '**/*.{md,json,yml,yaml}'
 
   # ── CI Summary + Auto-Issue Management ────────────────────────────────
+  scan-secrets:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: '8.30.1'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          # gitleaks walks whatever history is present locally, and checkout
+          # defaults to fetch-depth 1. Without this, the scan sees one commit
+          # and exits 0 whatever earlier commits contain.
+          fetch-depth: 0
+
+      - name: Install gitleaks (pinned, checksum-verified)
+        run: |
+          curl -sSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          sha256sum --ignore-missing -c "gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          tar -xzf "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" gitleaks
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Fail fast if the checkout is shallow
+        run: |
+          if [[ "$(git rev-parse --is-shallow-repository)" == "true" ]]; then
+            echo "::error::Shallow checkout: gitleaks would scan a truncated history and pass. Set fetch-depth: 0."
+            exit 1
+          fi
+
+      - name: Scan full git history for secrets
+        # --redact always: Actions logs are public on a public repository.
+        run: gitleaks git . --no-banner --redact
+
   ci-summary:
     name: CI Summary
     runs-on: ubuntu-latest
     if: always()
-    needs: [lint-markdown, lint-shell, format-check]
+    needs: [lint-markdown, lint-shell, format-check, scan-secrets]
     steps:
       - name: Checkout code
         uses: actions/checkout@v6

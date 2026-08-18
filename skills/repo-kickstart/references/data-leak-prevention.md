@@ -168,3 +168,58 @@ docs/plans/
 ```
 
 ## Common Mistakes
+
+## Credential scanning (gitleaks) — alongside, not instead
+
+The regex gate above targets **personal data** and carries the per-file `pii-allow` escape. It does
+not claim to cover credentials, and six patterns cannot: private keys, `gho_`/`ghu_`/`ghs_`/
+`github_pat_` tokens, Google/Azure/npm/PyPI/Docker credentials, and connection strings all pass it.
+Add gitleaks beside it; do not replace it.
+
+### Before enabling it on an existing repository
+
+Scan the history first:
+
+```bash
+gitleaks git . --no-banner --redact
+```
+
+A repository with a finding in an old commit goes **permanently red** the moment the CI job lands,
+and the only fix is rewriting history. Check before wiring, not after.
+
+### Pre-commit step
+
+```bash
+echo -n "  Scanning staged changes for credentials... "
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo ""
+    echo "    ${WARN} gitleaks not installed — the credential gate cannot run."
+    ERRORS=$((ERRORS + 1))
+elif gitleaks git --staged --no-banner --redact . >/dev/null 2>&1; then
+    echo "${PASS}"
+else
+    echo ""
+    echo "    ${WARN} Credentials detected in staged changes. Details (redacted):"
+    gitleaks git --staged --no-banner --redact -v . 2>&1 \
+        | grep -iE "^(RuleID|File|Line):" | sed 's/^/      /'
+    ERRORS=$((ERRORS + 1))
+fi
+```
+
+`-v` is what prints RuleID/File/Line; without it gitleaks reports only a count. `--redact` keeps the
+secret itself out of the terminal and out of CI logs.
+
+### Verify it, do not assume it
+
+A scanner nobody has seen refuse anything is decoration. Stage a fake private key and run the hook:
+
+```bash
+printf -- '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAxYz9%s\n-----END RSA PRIVATE KEY-----\n' \
+  "$(LC_ALL=C tr -dc 'A-Za-z0-9+/' </dev/urandom | head -c 200)" > probe_id_rsa
+git add probe_id_rsa && .githooks/pre-commit; echo "exit=$?"
+git reset -q HEAD probe_id_rsa && rm -f probe_id_rsa
+```
+
+Expected: exit 1, `RuleID: private-key`. Use random content — a token of repeated characters has no
+entropy and gitleaks discards it as a false positive, so a lazy probe passes and proves nothing.

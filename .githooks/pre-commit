@@ -100,6 +100,32 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 1b. Credential scan (gitleaks, staged only)
+# ─────────────────────────────────────────────────────────────────────────────
+# Complements step 1 rather than replacing it: that gate targets personal data
+# and carries the per-file pii-allow escape; this one covers the credential
+# surface (private keys, provider tokens, connection strings) that six regexes
+# never claimed to cover. This repository is PUBLIC, so a miss is permanent.
+echo -n "  Scanning staged changes for credentials... "
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo ""
+    echo "    ${WARN} gitleaks not installed — the credential gate cannot run."
+    echo "    Install it (brew install gitleaks) or bypass deliberately with --no-verify."
+    ERRORS=$((ERRORS + 1))
+elif gitleaks git --staged --no-banner --redact . >/dev/null 2>&1; then
+    echo "${PASS}"
+else
+    echo ""
+    echo "    ${WARN} Credentials detected in staged changes. Details (redacted):"
+    # -v is what prints RuleID/File/Line; without it gitleaks only says how many.
+    # --redact stays on so the secret itself never reaches the terminal or a log.
+    gitleaks git --staged --no-banner --redact -v . 2>&1 \
+        | grep -iE "^(RuleID|File|Line):" | sed 's/^/      /'
+    ERRORS=$((ERRORS + 1))
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 2. Prettier format check (staged md/json/yml/yaml only)
 # ─────────────────────────────────────────────────────────────────────────────
 if [ -n "$STAGED_FORMAT" ]; then

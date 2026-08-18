@@ -24,6 +24,11 @@ ignored — PRs/issues are created without labels, and search-by-label queries r
     "color": "e4e669",
     "description": "Related to format check CI job"
   },
+  {
+    "name": "job:secret-scan",
+    "color": "e4e669",
+    "description": "Related to secret scan CI job"
+  },
   { "name": "bug", "color": "d73a4a", "description": "Something isn't working" },
   { "name": "enhancement", "color": "a2eeef", "description": "New feature or request" },
   {

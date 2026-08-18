@@ -382,6 +382,8 @@ covering email obfuscation, pre-commit hooks, history purge, and `.gitignore` pa
 | commit-and-tag-version fails on commit               | Use `--skip.commit --skip.tag`, then commit manually                                                                                                   |
 | `.semver` needs trailing newline                     | Some tools strip it; configure `end-of-file-fixer` to exclude                                                                                          |
 | Personal email in CODE_OF_CONDUCT                    | Use obfuscated format: `hi [at] example [dot] com`                                                                                                     |
+| Secret scan on a shallow checkout                    | `fetch-depth: 0` on checkout; the default of 1 scans one commit and passes                                                                             |
+| Enabling a secret scan without checking history      | Run `gitleaks git . --redact` first; a historical finding makes CI permanently red                                                                     |
 | Personal data in git history                         | `git rm` only removes from HEAD; use `git filter-repo` to purge                                                                                        |
 | Personal paths in examples                           | Use generic paths (`~/Projects/...`) not real usernames                                                                                                |
 | Squash doesn't purge history                         | Squash only rewrites HEAD chain; old refs survive in reflog/remotes                                                                                    |
