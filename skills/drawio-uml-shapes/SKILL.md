@@ -7,16 +7,49 @@ description: >-
   reference", or "UML notation in draw.io".
 metadata:
   author: Jose R. Prieto (hi [at] joserprieto [dot] es)
-  version: '0.6.0'
-  last_verified: '2026-07-23'
+  version: '0.7.0'
+  last_verified: '2026-08-18'
 ---
 
 # Draw.io UML Shape Reference
 
 Brand-agnostic UML shape reference for draw.io XML generation. Covers six UML diagram types with
-correct shape-to-style mappings verified against draw.io 24.x desktop.
+correct shape-to-style mappings, verified by export against **draw.io Desktop 31.1.8**.
 
 **Core principle:** Shapes encode UML semantics. Colors encode project semantics. Never mix them.
+
+## Read this before generating anything
+
+Four things were measured on 31.1.8 that contradict how this skill was written for 24.x. Each one
+fails **silently** — the export succeeds and the result is wrong.
+
+| Measured                                                              | Consequence                                           |
+| --------------------------------------------------------------------- | ----------------------------------------------------- |
+| `mxgraph.uml.*` stencils render as **plain rectangles** in CLI export | Use the native fallbacks below, not the stencil names |
+| `--layout` applies to the **first page only**, ignoring `-p`          | Split multi-page files before laying out              |
+| Pages are numbered **from 1** (0-based before v27.0.2)                | A 24.x script exports the wrong page                  |
+| ELK destroys containers and ports; it helps flat graphs               | See `layout-reference.md` §1 before delegating layout |
+
+### The stencil trap
+
+Verified 2026-08-18 by exporting a probe with every catalogued shape. These six produce an
+**unstyled rectangle** — no component tabs, no artifact fold, no signal pentagon:
+
+`mxgraph.uml.component` · `mxgraph.uml.artifact` · `mxgraph.uml.node` · `mxgraph.uml.port` ·
+`mxgraph.uml25.sendSig` · `mxgraph.uml25.recSig`
+
+These render correctly and are what this skill now prefers:
+
+`cube` · `cylinder3` · `doubleCircle` · `note` · `umlDestroy` · `folder` · `swimlane` ·
+`umlLifeline` · `umlFrame` · `rounded` · `rhombus` · `ellipse`
+
+**The fallback is not a workaround, it is valid UML.** The standard admits both the component symbol
+and a plain rectangle carrying a `«component»` stereotype. Where a stencil fails, use a rectangle
+plus the stereotype in the label — it survives export, and it reads the same.
+
+Not yet distinguished: whether the stencils fail because shape libraries are not loaded in headless
+export, or because the names changed. Until that is known, do not assume the app preview reflects
+what the CLI will produce.
 
 ## When to use
 
@@ -34,7 +67,11 @@ correct shape-to-style mappings verified against draw.io 24.x desktop.
 ## Companion files
 
 - `shapes-reference.md` — complete shape catalog, all style strings and XML examples.
-- `layout-reference.md` — geometry on the grid, crossing-free tree layout, embedded fonts.
+- `layout-reference.md` — when to delegate layout to ELK and when not, CLI traps, hand placement.
+- `layouts/flow-down.json`, `layouts/flow-right.json` — calibrated layout profiles for `--layout`.
+- `layouts/probes/` — the synthetic diagrams each profile was validated against. Re-export these
+  after any draw.io upgrade and look at them.
+- `dod-reference.md` — per-type DoD and the structural validation checklist.
 
 ## Supported diagram types
 
@@ -91,7 +128,7 @@ All defaults use the Tailwind Slate palette for a clean, neutral appearance.
 
 `fontFamily=X` alone falls back to the default face wherever X is not installed — CLI and PNG/SVG
 exports on another machine included. Embed the whole family (every weight **and** italics) as a
-`data:text/css` `fontSource`. Procedure, caveats and cost: `layout-reference.md` §3.
+`data:text/css` `fontSource`. Embed only the declared weights: `layout-reference.md` §5.
 
 ### Brand override mechanism
 
@@ -152,11 +189,11 @@ digraph which_diagram {
 | Element              | draw.io Shape                         | UML    |
 | -------------------- | ------------------------------------- | ------ |
 | Device               | `shape=cube;direction=south;size=10`  | 2.0+   |
-| ExecutionEnvironment | `shape=mxgraph.uml.component`         | 2.0+   |
-| Artifact             | `shape=mxgraph.uml.artifact`          | 2.0+   |
-| DeploymentSpec       | `shape=mxgraph.uml.artifact` (italic) | 2.0+   |
+| ExecutionEnvironment | rect + `«executionEnvironment»` label | 2.0+   |
+| Artifact             | rect + `«artifact»` label             | 2.0+   |
+| DeploymentSpec       | rect + `«deploymentSpec»` (italic)    | 2.0+   |
 | Database [custom]    | `shape=cylinder3;size=8`              | custom |
-| Schema [custom]      | `shape=mxgraph.uml.artifact`          | custom |
+| Schema [custom]      | rect + `«schema»` label               | custom |
 
 **Containment rules:**
 
@@ -177,11 +214,11 @@ See `shapes-reference.md` §1 for all style strings and XML examples.
 
 | Element            | draw.io Shape                            | UML  |
 | ------------------ | ---------------------------------------- | ---- |
-| Component          | `shape=mxgraph.uml.component`            | 1.x+ |
+| Component          | rect + `«component»` label               | 1.x+ |
 | Subsystem          | `shape=folder;tabWidth=80`               | 2.0+ |
 | Provided Interface | `ellipse` (16px) or edge `endArrow=oval` | 2.0+ |
 | Required Interface | edge `endArrow=halfCircle`               | 2.0+ |
-| Port               | `shape=mxgraph.uml.port`                 | 2.0+ |
+| Port               | small `rect` on the parent boundary      | 2.0+ |
 
 **Containment rules:**
 
@@ -276,16 +313,16 @@ See `shapes-reference.md` §5 for all style strings and XML examples.
 
 **Key elements:**
 
-| Element        | draw.io Shape                 | UML  |
-| -------------- | ----------------------------- | ---- |
-| Action         | `rounded=1;arcSize=20`        | 2.0+ |
-| Decision/Merge | `rhombus`                     | 1.x+ |
-| Fork/Join      | filled bar                    | 1.x+ |
-| Initial        | `ellipse` (filled, 20px)      | 1.x+ |
-| Final          | `shape=doubleCircle`          | 1.x+ |
-| Swimlane       | `shape=swimlane;startSize=30` | 1.x+ |
-| Signal Send    | `shape=mxgraph.uml25.sendSig` | 2.0+ |
-| Signal Receive | `shape=mxgraph.uml25.recSig`  | 2.0+ |
+| Element        | draw.io Shape                        | UML  |
+| -------------- | ------------------------------------ | ---- |
+| Action         | `rounded=1;arcSize=20`               | 2.0+ |
+| Decision/Merge | `rhombus`                            | 1.x+ |
+| Fork/Join      | filled bar                           | 1.x+ |
+| Initial        | `ellipse` (filled, 20px)             | 1.x+ |
+| Final          | `shape=doubleCircle`                 | 1.x+ |
+| Swimlane       | `shape=swimlane;startSize=30`        | 1.x+ |
+| Signal Send    | `shape=step;perimeter=stepPerimeter` | 2.0+ |
+| Signal Receive | `shape=step;direction=west`          | 2.0+ |
 
 **Containment rules:**
 
@@ -368,112 +405,20 @@ mechanically rather than by eye. Rules table: `layout-reference.md` §2.
 - `verticalAlign=top` for labels below the line
 - Multiplicity labels use `align=left` or `align=right` at endpoints
 
-## Definition of done
+## Definition of done and validation
 
-### Deployment DoD
-
-- [ ] Every physical/virtual host is a `<<device>>` (cube)
-- [ ] Software runtimes are `<<executionEnvironment>>` (component shape)
-- [ ] Deployable units are `<<artifact>>` with correct nesting
-- [ ] Database engines use `<<database>>` (cylinder)
-- [ ] Color roles match element categories
-- [ ] Parent-child geometry is relative to parent
-- [ ] All edges use orthogonal routing
-
-### Sequence DoD
-
-- [ ] Every participant has a lifeline
-- [ ] Messages use correct arrow types (sync=filled, async=open, reply=dashed)
-- [ ] Combined fragments have operator labels (alt, loop, opt, etc.)
-- [ ] Activation boxes span correct execution periods
-- [ ] Lifelines use `container=1`
-
-### State machine DoD
-
-- [ ] Has exactly one initial pseudostate
-- [ ] All terminal paths reach a final state or are documented as non-terminating
-- [ ] Composite states have clear entry/exit transitions
-- [ ] Transitions have `trigger [guard] / effect` labels
-- [ ] Choice pseudostates have guards on all outgoing transitions
-
-### Component DoD
-
-- [ ] Components expose provided interfaces (lollipop)
-- [ ] Dependencies shown as required interfaces (socket) or dashed arrows
-- [ ] Subsystems group related components
-- [ ] Ports shown where components cross boundaries
-
-### Package/Class DoD
-
-- [ ] Classes have attributes and methods in separate compartments
-- [ ] Relationships use correct UML notation (composition ≠ aggregation)
-- [ ] Abstract classes/interfaces have italic names or stereotypes
-- [ ] Multiplicity labels present on associations
-
-### Activity DoD
-
-- [ ] Has exactly one initial node
-- [ ] All terminal paths reach a final node or are documented as non-terminating
-- [ ] Decision nodes have guards on all outgoing edges
-- [ ] Fork/Join bars balance (every fork has a matching join)
-- [ ] Swimlanes partition responsibilities clearly
-
-## Validation checklist
-
-Before considering a diagram complete, verify the following.
-
-### Structure
-
-- [ ] XML well-formed (`<mxGraphModel>` → `<root>` → cells)
-- [ ] Cell 0 (root) and Cell 1 (default parent) present
-- [ ] No orphaned cells (every cell has valid parent)
-- [ ] Cell IDs are semantic and hyphenated (`dev-appserver`, not `cell-47`)
-
-### Containment
-
-- [ ] Parent-child relationships match UML containment rules
-- [ ] Child geometry is relative to parent (NOT absolute)
-- [ ] **ALL containers/groupings MUST have `container=1`** in the style string
-- [ ] **ALL containers MUST have `collapsible=0`** — never allow collapsing in UML diagrams
-- [ ] **ALL containers MUST have `recursiveResize=0`** — children must NOT auto-resize with parent
-- [ ] Combined: every container style includes `container=1;collapsible=0;recursiveResize=0;`
-
-### Colors
-
-- [ ] All fills/strokes use semantic role colors (no ad-hoc hex values)
-- [ ] EOL/critical elements use `semantic-critical` role
-- [ ] Category colors match element purpose
-
-### Typography
-
-- [ ] Font family is `Sans-serif` (or brand override)
-- [ ] Font sizes follow scale: titles 14-16px, elements 9-11px, details 7-8px
-- [ ] Bold (`fontStyle=1`) for container labels, regular for content
-
-### Edges
-
-- [ ] All edges have `edgeStyle=orthogonalEdgeStyle` (unless justified)
-- [ ] Arrow types match UML semantics (see Common Elements)
-- [ ] Labels positioned consistently
-- [ ] **No unresolved edge crossings** — use `jumpStyle=arc;jumpSize=8;` where edges must cross
-- [ ] **Minimize edge crossings** through spatial arrangement before resorting to jumps
-- [ ] **CRITICAL: every `edge="1"` cell MUST have a `<mxGeometry relative="1" as="geometry" />`
-      child** — even if empty. Self-closing edges (`<mxCell .../>`) cause draw.io to open the file
-      with the viewport stuck in an empty corner ("infinite scroll" bug). See Common Mistakes.
-
-### Page
-
-- [ ] Page dimensions set (`pageWidth=1920;pageHeight=1080` for screen, `1169x827` for A3)
-- [ ] All shapes within page bounds
+Per-type DoD checklists (deployment, sequence, state machine, component, package/class, activity)
+and the structural validation checklist live in `dod-reference.md`. Run them against a finished
+diagram before calling it done.
 
 ## Common mistakes
 
 | Mistake                                          | Fix                                                                                                                                                                                                                                                                                                                                                            |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Using `shape=mxgraph.uml.node` for Device        | Use `shape=cube;direction=south;size=10`                                                                                                                                                                                                                                                                                                                       |
-| Using `shape=cube` for ExecutionEnvironment      | Use `shape=mxgraph.uml.component`                                                                                                                                                                                                                                                                                                                              |
+| Using `shape=cube` for ExecutionEnvironment      | Use a rect with an `«executionEnvironment»` label                                                                                                                                                                                                                                                                                                              |
 | Omitting `edgeStyle=orthogonalEdgeStyle`         | Always set edgeStyle — bare edges cross shapes                                                                                                                                                                                                                                                                                                                 |
-| Using `shape=mxgraph.uml25.component`            | Use `shape=mxgraph.uml.component` (more reliable)                                                                                                                                                                                                                                                                                                              |
+| Using any `mxgraph.uml.*` stencil                | Renders as a plain rectangle in CLI export — use the native fallback                                                                                                                                                                                                                                                                                           |
 | Hardcoding brand colors in style strings         | Use semantic role defaults; brand skill overrides                                                                                                                                                                                                                                                                                                              |
 | Absolute geometry for nested cells               | Child geometry is relative to parent                                                                                                                                                                                                                                                                                                                           |
 | Missing `recursiveResize=0` on containers        | Children auto-resize unexpectedly                                                                                                                                                                                                                                                                                                                              |

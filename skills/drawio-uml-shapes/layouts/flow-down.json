@@ -1,0 +1,30 @@
+[
+  {
+    "layout": "elkLayered",
+    "config": {
+      "elk.direction": "DOWN",
+      "elk.spacing.nodeNode": "20",
+      "elk.layered.spacing.nodeNodeBetweenLayers": "20",
+      "elk.layered.nodePlacement.strategy": "SIMPLE",
+      "elk.edgeRouting": "ORTHOGONAL",
+      "edgeStyle": "auto",
+      "corners": "rounded",
+      "resizeNodes": false,
+      "preserveOrigin": true
+    }
+  },
+  {
+    "layout": "mxParallelEdgeLayout",
+    "config": {
+      "spacing": 24,
+      "checkOverlap": true
+    }
+  },
+  {
+    "layout": "orthogonalEdge",
+    "config": {
+      "shapeBufferDistance": 24,
+      "idealNudgingDistance": 16
+    }
+  }
+]

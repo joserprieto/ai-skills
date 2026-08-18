@@ -1,109 +1,137 @@
-# Draw.io Layout Reference — geometry, crossing-free trees, embedded fonts
+# Layout reference
 
-Companion to `SKILL.md`. Everything here is layout and rendering mechanics: how to place shapes on
-the grid, how to draw a hierarchy with zero edge crossings, and how to make a `.drawio` render with
-the right typeface anywhere. Brand-agnostic — the colours and fonts come from your brand skill.
+Who computes the geometry, and when. Measured against draw.io Desktop **31.1.8** on 2026-08-18.
 
----
+## 1. Decide with a grep, not with the diagram's name
 
-## 1. Tree / hierarchy layout — zero crossings by construction
+The first question is not "what kind of diagram is this" — that was tested and does not predict the
+outcome. Containment, anchored ports and positional notation cut **across** the UML types: a
+component diagram without a subsystem is a flat graph, and a state machine with composite states is
+not.
 
-For any tree or strict hierarchy (containment, nested states, package trees, taxonomies, org charts)
-you can guarantee **zero** edge crossings — no jump arcs — with a left-to-right "comb".
+Run these against the XML. Any hit means **do not delegate the layout**:
 
-### 1.1 Node placement: contiguous subtree bands
-
-Lay the leaves out in depth-first order, one row each. Give every internal node the y-centre of its
-descendant band:
-
-```
-center(node) = node.isLeaf
-  ? cursor + height/2                                    (then advance the cursor)
-  : (center(firstChild) + center(lastChild)) / 2
+```bash
+grep -c 'container=1'   diagram.drawio   # parents with children
+grep -c 'exitX='        diagram.drawio   # ports anchored to a boundary
+grep -c 'umlLifeline'   diagram.drawio   # geometry is notation, not arrangement
 ```
 
-Sibling subtrees then occupy **disjoint vertical bands**, which is the precondition that makes the
-rest work.
+| Result          | Layout                            |
+| --------------- | --------------------------------- |
+| any of them > 0 | place by hand — see §4            |
+| all zero        | delegate — pick a profile from §2 |
 
-### 1.2 Edge routing: one vertical bus per parent
+### Why: the measurement behind the rule
 
-Route every parent→child edge through a single vertical line — the bus — sitting in the column gap
-immediately right of the parent. Pin the endpoints and give explicit waypoints so draw.io's
-auto-router never gets a vote:
+One file, four pages, one pipeline. On the **state machine** page (flat graph) ELK produced a clean
+top-to-bottom flow with side branches placed correctly and orthogonal edges avoiding shapes.
 
+On the **component** page (a `«subsystem»` container plus six interface ports) the same pipeline
+emptied the container, ejected every child outside it, detached all six port labels into floating
+text, and inflated the canvas from 1456×900 to 2530×3176 of mostly dead space.
+
+The prediction going in was that ELK would suit component diagrams and ruin sequence diagrams. It
+was wrong, which is why the rule now keys on a grep rather than on a judgement about a page name.
+
+## 2. Profiles
+
+Two, both run and looked at. Each ships a probe in `layouts/probes/` so revalidating after the next
+draw.io major is "export these two and look", not an audit.
+
+| Profile                   | Use when                            | Probe result |
+| ------------------------- | ----------------------------------- | ------------ |
+| `layouts/flow-down.json`  | branching graph, several successors | 805×811      |
+| `layouts/flow-right.json` | near-linear chain, landscape output | 1503×237     |
+
+Both share the same base and differ only in `elk.direction`: node and rank spacing **20 / 20**,
+`nodePlacement.strategy` **SIMPLE**, `resizeNodes` off, `preserveOrigin` on, orthogonal routing,
+rounded corners.
+
+### Two settings that were arrived at the hard way
+
+**Spacing stays at 20 / 20.** The values 40 / 56 came from a design note arguing they "stop the
+result looking cramped". Applied to a real diagram they stretch the canvas and read worse, and
+raising them does not fix anything else either — tested at 40, the arrowhead defect below persisted
+unchanged while the canvas grew 200px wider.
+
+**`nodePlacement.strategy` must be `SIMPLE`, not the `NETWORK_SIMPLEX` default.** With the default,
+arrowheads enter shapes from the wrong side: in a chain of equal-height nodes the placement offsets
+them vertically, so the orthogonal router leaves by the right edge, climbs, and enters the next
+shape through its _top_, pointing downwards instead of along the flow. `NETWORK_SIMPLEX` optimises
+total edge length, not alignment.
+
+`SIMPLE` fixed it on both probes: the linear chain became a straight line with arrows entering
+head-on, and the branching graph gained a clean central axis with its three branches symmetric in
+and out of the merge node. Cost: 72px of height on the branching probe.
+
+**Watch out — ELK reorders branches.** In the branching probe the three branches come out ordered C,
+B, A, left to right, reversed from their order in the XML. Harmless when branches are peers; if the
+order carries meaning (priority, sequence), the profile will shuffle it without warning.
+
+ELK numeric options are **strings**, not numbers — a numeric value is ignored in silence.
+`preserveOrigin` defaults to `false`, which packs the result near the origin; in a pipeline you want
+it `true`.
+
+## 3. Notes, legends and anything that is not part of the graph
+
+They get treated as loose nodes and scattered — **unless** the layout is restricted to the graph.
+
+In the app: select only the graph nodes and tick **"use selection as roots"** in the layout dialog.
+The note then stays where you put it. In JSON the equivalent is `rootCellIds`.
+
+That still leaves the note outside the layout, so its final position is yours to set: either it
+joins the layout and drifts, or it stays out and you place it. There is no third option.
+
+## 4. CLI traps
+
+Both fail silently: the export succeeds and produces the wrong thing.
+
+**`--layout` applies to the first page only.** Verified by md5: with `-p 2`, `-p 3`, `-p 4` the
+output was byte-identical to the un-laid-out export. Only page 1 changed. Split a multi-page file
+into one file per `<diagram>` block before laying out.
+
+**Pages are numbered from 1.** They were 0-based before v27.0.2, so a script written against 24.x
+either errors or exports the wrong page.
+
+```bash
+drawio -x -f png --scale 2 --layout "$(cat layouts/flow-down.json)" -o out.png page.drawio
 ```
-style: edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;endArrow=none;
-geometry:
-  <Array as="points">
-    <mxPoint x="BUS" y="parentCenterY"/>
-    <mxPoint x="BUS" y="childCenterY"/>
-  </Array>
-```
 
-`BUS = parent.x + parent.width + gap/2` — the **same** value for every child of that parent, and a
-distinct bus x per depth.
+## 5. Where the layouts live in the app
 
-### 1.3 Why it cannot cross
+The interface never says "ELK". Menu labels map to the JSON identifiers like this (Spanish UI in
+brackets):
 
-All of one parent's edges share a single horizontal trunk out of the parent, then branch vertically
-at the bus, then run horizontally into each child: a comb. Two combs can only meet if they share a
-bus x **and** overlap in y — impossible, because sibling bands are disjoint (1.1) and each depth has
-its own bus x (1.2).
+| Menu item [es]                               | JSON identifier                                  |
+| -------------------------------------------- | ------------------------------------------------ |
+| Vertical flow [Flujo vertical]               | `elkLayered` with `elk.direction: DOWN`          |
+| Horizontal flow [Flujo horizontal]           | `elk.direction: RIGHT`                           |
+| Trees [Árbol vertical / horizontal / radial] | `verticalTree` · `horizontalTree` · `radialTree` |
+| Parallels [Paralelos]                        | `mxParallelEdgeLayout`                           |
+| Orthogonal routing [Enrutamiento ortogonal]  | `orthogonalEdge`                                 |
+| **Custom [Personalizado]**                   | where the JSON array is pasted                   |
 
-This is structural. Prefer it to `jumpStyle=arc` whenever the graph is a tree; jumps are for graphs
-that genuinely aren't planar in the chosen layout.
+`Arrange → Layout → Custom` is where a profile gets calibrated: paste, apply, look, adjust. What
+ends up in the textarea is what belongs in `layouts/*.json`.
 
----
+## 6. When placing by hand
 
-## 2. Geometry on the grid
+Everything §1 sends this way.
 
-Keep the whole model on `gridSize` (default 10): every `width`/`height` a multiple of the grid, and
-snap every `x`/`y` — including edge waypoints and the bus x — with `round(v/grid)*grid`. Off-grid
-coordinates are exactly what make boxes look "almost aligned" and edges kink by a pixel.
+- Keep the model on `gridSize`: sizes as grid multiples, every coordinate snapped, at least two
+  cells of separation.
+- Derive height from line count; fit width per **column**, not per box.
+- Small **absolute** corner radius, `verticalAlign=middle` by default.
+- Zero overlaps, verified mechanically rather than by eye.
+- For trees, contiguous subtree bands plus one vertical bus per parent with pinned `exitX`/`entryX`
+  gives zero crossings by construction — prefer it to `jumpStyle=arc`.
 
-| Rule                   | Do this                                                                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Separation**         | ≥ 2 grid cells between any two shapes, horizontally and vertically. Tighter reads as one block.                                      |
-| **Height**             | Derive from the text: `h = pad + step × lineCount` (e.g. `20 + 20 × lines`). Never a fixed height that clips two-line labels.        |
-| **Width**              | Fit per **column**, not per box: size each column to its own widest label, then give every box in that column that width.            |
-| **Corner radius**      | `rounded=1;absoluteArcSize=1;arcSize=6`. A percentage radius scales with the shape, so tall boxes get a curve that crowds the label. |
-| **Vertical alignment** | `verticalAlign=middle` for labelled shapes. Dense text panels (legends, notes) read better `verticalAlign=top`.                      |
-| **Overlap**            | Zero. Verify mechanically — parse the model and assert no two vertex bounding boxes intersect.                                       |
+## 7. Embedding fonts
 
-**Why width is per column, not per box:** sizing each box to its own text makes the column edges
-ragged, and a ragged column costs more readability than the whitespace it saves. The column is the
-alignment cue the eye follows.
+`fontFamily=X` alone falls back to the default face wherever X is not installed, CLI exports
+included. Embed the family as a `data:text/css` `fontSource`.
 
----
-
-## 3. Embedding fonts offline (portable exports)
-
-`fontFamily=X` alone only works if the renderer already has X installed — CLI/PNG/SVG exports on
-another machine silently fall back to the default face. To make a `.drawio` self-contained, embed
-the family as a data-URI `fontSource`.
-
-**Verified:** draw.io's exporter honours a `data:text/css` fontSource (24.x, `-e` PNG export).
-
-### 3.1 Procedure
-
-1. Build ONE CSS with an `@font-face` per weight **and** per style — italics too, not just upright —
-   each `src:` a `data:font/woff2;base64,…` of that face. Keep the `unicode-range` when a face is
-   split into `latin` / `latin-ext`, or the two subsets overwrite each other instead of coexisting.
-2. Wrap it: `fontSource = urlencode("data:text/css;base64," + base64(css))`. URL-encode the whole
-   value, or `;` `,` `=` `/` will break draw.io's style parser.
-3. Put `fontFamily=Family;fontSource=<that>` on **one** cell per family. Every other cell needs only
-   `fontFamily=Family` — draw.io registers the `@font-face` globally, so all cells pick it up.
-
-### 3.2 Rules
-
-- **Embed the whole family, not one weight.** Relying on synthetic bold/italic gives smeared
-  faux-bold and slanted uprights. Get the real faces — Google Fonts serves them with `ital,wght@…`.
-- **Cost is real:** the file grows by the embedded bytes (hundreds of KB for two full families).
-  Accept it, or move a font-heavy page into its own file.
-- **Check every cell got a family.** A single cell left without `fontFamily` renders in the default
-  face and is easy to miss in a dense diagram.
-
-### 3.3 Verify by looking
-
-Export the page (`drawio -x -f png -e -p <page> -o out.png file.drawio`) and actually open the
-image. Valid XML proves nothing about whether the font loaded.
+Embed **only the weights actually declared**, never a whole family: base64 inside a `data:` URI adds
+roughly a third on top of the font's own size, and it lands inside every `.drawio` that carries it.
+Brand skills ship the `.woff2` files; see the brand skill's `references/drawio-roles.md`.
